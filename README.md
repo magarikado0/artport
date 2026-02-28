@@ -10,29 +10,7 @@ npm install
 ```
 
 ### 2. Firebase プロジェクトの設定
-`.env.local.example` を `.env.local` にコピーして、Firebase Console から値を記入してください。
-
-```bash
-cp .env.local.example .env.local
-```
-
-### 3. Firebase Console での設定
-- Authentication → Google ログインを有効化
-- Firestore → テストモードでデータベース作成
-- Storage → バケット作成
-- ルールは開発中は以下を使用:
-
-```
-// Firestore rules
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if request.auth != null;
-    }
-  }
-}
-```
+.env.localファイルにFirebase Console から値を記入してください。
 
 ### 4. 起動
 ```bash
