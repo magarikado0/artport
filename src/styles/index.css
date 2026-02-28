@@ -1,0 +1,108 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #e8e4de;
+    font-family: 'Noto Sans JP', sans-serif;
+    color: #1a1612;
+  }
+}
+
+@layer components {
+  .genre-tag {
+    @apply inline-block bg-[#ede8e1] text-muted text-[9px] px-2 py-0.5 rounded-full font-mono tracking-wide;
+  }
+  .form-label {
+    @apply block font-mono text-[9px] tracking-widest text-muted uppercase mb-1.5;
+  }
+  .form-input {
+    @apply w-full px-3.5 py-3 border border-border rounded-xl text-[13px] bg-white text-ink outline-none focus:border-accent transition-colors;
+    font-family: 'Noto Sans JP', sans-serif;
+  }
+  .form-select {
+    @apply w-full px-3.5 py-3 border border-border rounded-xl text-[13px] bg-white text-ink outline-none appearance-none;
+    font-family: 'Noto Sans JP', sans-serif;
+  }
+  .btn-primary {
+    @apply w-full py-4 bg-ink text-paper rounded-2xl text-lg cursor-pointer border-none tracking-wide;
+    font-family: 'Cormorant Garamond', serif;
+  }
+  .btn-secondary {
+    @apply w-full py-3.5 border border-border rounded-2xl text-[11px] font-mono text-muted cursor-pointer bg-transparent tracking-wider;
+  }
+  .guide-card {
+    @apply bg-ink text-paper rounded-2xl p-[18px] mb-3.5 relative overflow-hidden;
+  }
+  .guide-label {
+    @apply font-mono text-[9px] tracking-[0.12em] text-accent uppercase mb-2.5 flex items-center gap-1.5;
+  }
+  .guide-text {
+    @apply text-[13px] leading-[1.85] text-paper/90 font-light;
+  }
+  .bottom-nav {
+    @apply sticky bottom-0 bg-paper border-t border-border flex pb-5 pt-2;
+  }
+  .nav-item {
+    @apply flex-1 flex flex-col items-center gap-0.5 cursor-pointer py-1.5;
+  }
+  .nav-icon {
+    @apply text-xl leading-none;
+  }
+  .nav-label {
+    @apply text-[9px] tracking-wide text-muted font-mono;
+  }
+  .nav-item.active .nav-label {
+    @apply text-accent;
+  }
+  .app-header {
+    @apply px-5 pt-4 pb-3 flex items-center justify-between border-b border-border bg-paper;
+  }
+  .app-logo {
+    font-family: 'Cormorant Garamond', serif;
+    @apply text-[22px] tracking-wide text-ink;
+  }
+  .section-title {
+    @apply font-mono text-[10px] tracking-[0.12em] text-muted uppercase mb-3;
+  }
+  .artwork-card {
+    @apply bg-white rounded-xl overflow-hidden shadow-sm cursor-pointer;
+  }
+  .filter-tab {
+    @apply flex-shrink-0 bg-warm border-none rounded-full px-3.5 py-1.5 text-[11px] font-mono text-muted cursor-pointer tracking-wide;
+  }
+  .filter-tab.active {
+    @apply bg-ink text-paper;
+  }
+}
+
+/* Animations */
+@keyframes scanMove {
+  0% { top: 10%; opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { top: 90%; opacity: 0; }
+}
+@keyframes pulseRing {
+  0% { opacity: 0.8; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.06); }
+}
+@keyframes progressAnim {
+  0% { width: 20%; }
+  100% { width: 85%; }
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.animate-scan { animation: scanMove 2.4s ease-in-out infinite; }
+.animate-pulse-ring { animation: pulseRing 1.8s ease-out infinite; }
+.animate-progress { animation: progressAnim 2s ease-in-out infinite alternate; }
+.animate-fade-in-up { animation: fadeInUp 0.4s ease forwards; }
+.animate-blink { animation: blink 1s ease-in-out infinite; }
