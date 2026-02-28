@@ -22,8 +22,6 @@ export default function ArtworkDetailPage() {
         // キャッシュ済みガイドがあればそのまま使う
         if (data.guide) {
           setGuide(data.guide)
-        } else {
-          generateGuide(data)
         }
       } catch (e) {
         setError('作品の読み込みに失敗しました')
@@ -32,11 +30,11 @@ export default function ArtworkDetailPage() {
     loadArtwork()
   }, [id])
 
-  async function generateGuide(data) {
-    if (!data.imageUrl) return
+  async function handleGenerateGuide() {
+    if (!artwork || !artwork.imageUrl) return
     setGuideLoading(true)
     try {
-      const result = await generateViewingGuide(data.imageUrl, data.genre, data.title)
+      const result = await generateViewingGuide(artwork.imageUrl, artwork.genre, artwork.title)
       setGuide(result)
       // Firestoreにキャッシュ保存
       await updateDoc(doc(db, 'artworks', id), { guide: result })
@@ -105,9 +103,13 @@ export default function ArtworkDetailPage() {
               <div className="guide-ai-badge">✦ Gemini により生成</div>
             </>
           ) : (
-            <div className="guide-text" style={{ opacity: 0.5 }}>
-              ガイドを生成できませんでした
-            </div>
+            <button
+              onClick={handleGenerateGuide}
+              className="btn-primary"
+              style={{ marginTop: 16 }}
+            >
+              ガイドを生成する
+            </button>
           )}
         </div>
 
