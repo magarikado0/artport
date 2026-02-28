@@ -25,7 +25,7 @@ export default function GuidePopup({ artwork, onClose }) {
 
   async function loadGuide() {
     setLoading(true)
-    setError(null)
+    setError(null) // エラー状態をリセット
     try {
       const result = await generateViewingGuide(
         artwork.imageUrl,
@@ -33,6 +33,9 @@ export default function GuidePopup({ artwork, onClose }) {
         artwork.title
       )
       setGuide(result)
+      if (result) {
+        setError(null) // ガイド生成成功時にエラーをクリア
+      }
       // Firestoreにキャッシュ保存
       await saveArtworkGuide(artwork.id, JSON.stringify(result))
     } catch (e) {
@@ -118,45 +121,7 @@ export default function GuidePopup({ artwork, onClose }) {
               )}
             </div>
 
-            {loading && (
-              <div className="space-y-4">
-                {/* analyzing steps */}
-                {[
-                  { label: '作品ジャンルを検出', done: true },
-                  { label: '構図・技法を分析', done: true },
-                  { label: '鑑賞ガイドを生成中...', done: false, active: true },
-                  { label: '展覧会情報を照合', done: false },
-                ].map((step) => (
-                  <div key={step.label} className="flex items-center gap-2 font-mono text-[9px] tracking-wide">
-                    <span
-                      className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-                        step.done
-                          ? 'bg-accent'
-                          : step.active
-                          ? 'bg-accent animate-blink'
-                          : 'bg-white/20'
-                      }`}
-                    />
-                    <span
-                      className={
-                        step.done
-                          ? 'text-paper/50'
-                          : step.active
-                          ? 'text-paper/90'
-                          : 'text-paper/25'
-                      }
-                    >
-                      {step.label}
-                    </span>
-                  </div>
-                ))}
-                <div className="w-full h-0.5 bg-white/10 rounded overflow-hidden">
-                  <div className="h-full bg-accent animate-progress rounded" />
-                </div>
-              </div>
-            )}
-
-            {error && (
+            {error && !guide && ( // ガイドがない場合のみエラーを表示
               <p className="guide-text text-red-400">{error}</p>
             )}
 

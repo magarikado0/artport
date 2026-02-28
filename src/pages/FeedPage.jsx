@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import BottomNav from '../components/layout/BottomNav'
-import GuidePopup from '../components/ui/GuidePopup'
 import { fetchArtworks } from '../lib/firestore'
 
 const GENRES = ['すべて', '書道', '写真', '陶芸', '絵画', '彫刻']
@@ -22,10 +22,10 @@ const BG = {
 }
 
 export default function FeedPage() {
+  const navigate = useNavigate()
   const [activeGenre, setActiveGenre] = useState('すべて')
   const [artworks, setArtworks] = useState([])
   const [loading, setLoading] = useState(true)
-  const [selected, setSelected] = useState(null)
 
   useEffect(() => { load() }, [activeGenre])
 
@@ -65,7 +65,7 @@ export default function FeedPage() {
           : artworks.map((a,i) => {
               const tall = a.tall || i%5===0
               return (
-                <div key={a.id} className={`artwork-card ${tall?'row-span-2':''}`} onClick={() => setSelected(a)}>
+                <div key={a.id} className={`artwork-card ${tall?'row-span-2':''}`} onClick={() => navigate(`/artworks/${a.id}`)}>
                   <div className="w-full flex items-center justify-center overflow-hidden"
                     style={{aspectRatio: tall?'1/1.6':'1', background: BG[a.genre]||'linear-gradient(135deg,#e8e0d4,#d4ccc0)'}}>
                     {a.imageUrl
@@ -85,7 +85,6 @@ export default function FeedPage() {
       </div>
 
       <BottomNav />
-      {selected && <GuidePopup artwork={selected} onClose={() => setSelected(null)} />}
     </div>
   )
 }

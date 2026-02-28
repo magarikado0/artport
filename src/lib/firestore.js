@@ -123,3 +123,16 @@ export async function fetchExhibitionsByArtist(artistId) {
   const snap = await getDocs(q)
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }))
 }
+
+export async function fetchArtworkById(id) {
+  try {
+    const snap = await getDoc(doc(db, 'artworks', id))
+    if (!snap.exists()) {
+      throw new Error('Artwork not found')
+    }
+    return { id: snap.id, ...snap.data() }
+  } catch (error) {
+    console.error('Error fetching artwork:', error)
+    throw error
+  }
+}

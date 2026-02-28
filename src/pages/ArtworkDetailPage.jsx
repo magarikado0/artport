@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
 import { doc, getDoc, updateDoc } from 'firebase/firestore'
 import { db } from '../lib/firebase'
 import { generateViewingGuide } from '../lib/gemini'
+import { fetchArtworkById } from '../lib/firestore'
 
 export default function ArtworkDetailPage() {
   const { id } = useParams()
@@ -13,26 +14,23 @@ export default function ArtworkDetailPage() {
   const [error, setError] = useState(null)
 
   useEffect(() => {
-    fetchArtwork()
-  }, [id])
+    async function loadArtwork() {
+      try {
+        const data = await fetchArtworkById(id)
+        setArtwork(data)
 
-  async function fetchArtwork() {
-    try {
-      const snap = await getDoc(doc(db, 'artworks', id))
-      if (!snap.exists()) { navigate('/'); return }
-      const data = { id: snap.id, ...snap.data() }
-      setArtwork(data)
-
-      // キャッシュ済みガイドがあればそのまま使う
-      if (data.guide) {
-        setGuide(data.guide)
-      } else {
-        generateGuide(data)
+        // キャッシュ済みガイドがあればそのまま使う
+        if (data.guide) {
+          setGuide(data.guide)
+        } else {
+          generateGuide(data)
+        }
+      } catch (e) {
+        setError('作品の読み込みに失敗しました')
       }
-    } catch (e) {
-      setError('作品の読み込みに失敗しました')
     }
-  }
+    loadArtwork()
+  }, [id])
 
   async function generateGuide(data) {
     if (!data.imageUrl) return
