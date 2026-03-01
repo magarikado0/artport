@@ -41,7 +41,7 @@ export default function ExhibitionsPage() {
       <div className="flex-1 p-4 space-y-3">
         {exhibitions.map(ex => (
           <div key={ex.id} className="bg-white rounded-2xl overflow-hidden shadow-sm cursor-pointer" onClick={() => navigate(`/exhibitions/${ex.id}`)}>
-            <div className="w-full h-40 flex items-center justify-center text-5xl opacity-20"
+            <div className="w-full h-40 flex items-center justify-center text-5xl"
               style={{background: ex.coverBg || 'linear-gradient(135deg,#e8e0d0,#d4c8b4)'}}>
               {ex.symbol || ex.coverUrl
                 ? ex.coverUrl ? <img src={ex.coverUrl} className="w-full h-full object-cover" /> : ex.symbol
