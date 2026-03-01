@@ -1,6 +1,8 @@
 import { useState, useEffect, createContext, useContext } from 'react'
 import {
   signInWithPopup,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
 } from 'firebase/auth'
@@ -48,10 +50,30 @@ export function AuthProvider({ children }) {
   }, [])
 
   const loginWithGoogle = () => signInWithPopup(auth, googleProvider)
+  
+  const loginWithEmail = (email, password) => signInWithEmailAndPassword(auth, email, password)
+  
+  const signupWithEmail = async (email, password, name) => {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password)
+    // Firestoreにプロフィール作成
+    const newProfile = {
+      uid: userCredential.user.uid,
+      name: name || '',
+      email: userCredential.user.email || '',
+      avatarUrl: '',
+      role: 'viewer',
+      bio: '',
+      genre: '',
+      createdAt: new Date(),
+    }
+    await setDoc(doc(db, 'users', userCredential.user.uid), newProfile)
+    return userCredential
+  }
+  
   const logout = () => signOut(auth)
 
   return (
-    <AuthContext.Provider value={{ user, userProfile, loading, loginWithGoogle, logout }}>
+    <AuthContext.Provider value={{ user, userProfile, loading, loginWithGoogle, loginWithEmail, signupWithEmail, logout }}>
       {children}
     </AuthContext.Provider>
   )

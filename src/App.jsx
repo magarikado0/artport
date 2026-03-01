@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './hooks/useAuth'
 import './styles/index.css'
 
 import LoginPage from './pages/LoginPage'
+import EmailLoginPage from './pages/EmailLoginPage'
 import FeedPage from './pages/FeedPage'
 import ExhibitionsPage from './pages/ExhibitionsPage'
 import ExhibitionDetailPage from './pages/ExhibitionDetailPage'
@@ -31,6 +32,7 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/login/email" element={<EmailLoginPage />} />
       <Route path="/" element={<PrivateRoute><FeedPage /></PrivateRoute>} />
       <Route path="/exhibitions" element={<PrivateRoute><ExhibitionsPage /></PrivateRoute>} />
       <Route path="/exhibitions/create" element={<PrivateRoute><ExhibitionCreatePage /></PrivateRoute>} />
