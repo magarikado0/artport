@@ -121,13 +121,13 @@ export default function CameraPage() {
   }
 
   return (
-    <div style={{ background: '#0a0806', minHeight: '100vh', position: 'relative' }}>
-      <canvas ref={canvasRef} style={{ display: 'none' }} />
+    <div className="min-h-screen bg-ink relative">
+      <canvas ref={canvasRef} className="hidden" />
 
       {/* ── STATE: CAMERA ── */}
       {state === 'camera' && (
-        <div style={s.cameraView}>
-          <video ref={videoRef} autoPlay playsInline muted style={s.video} />
+        <div className="w-full h-screen relative overflow-hidden">
+          <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
 
           {/* Scan frame overlay */}
           <div style={s.scanOverlay}>
@@ -138,61 +138,61 @@ export default function CameraPage() {
           </div>
 
           {/* Top bar */}
-          <div style={s.top}>
-            <button style={s.circleBtn} onClick={() => navigate(-1)}>←</button>
-            <span style={s.topTitle}>✦ 作品をスキャン</span>
-            <div style={{ width: 36 }} />
+          <div className="absolute top-0 left-0 right-0 pt-[52px] px-5 pb-4 flex items-center justify-between bg-gradient-to-b from-black/60 to-transparent z-10">
+            <button className="w-9 h-9 bg-white/12 border border-white/15 rounded-full text-white" onClick={() => navigate(-1)}>←</button>
+            <span className="font-mono text-[11px] tracking-[0.1em] text-white/80 uppercase">✦ 作品をスキャン</span>
+            <div className="w-9" />
           </div>
 
           {/* Instruction */}
-          <div style={s.instruction}>
-            <span style={s.instructionText}>作品を枠内に合わせてください</span>
+          <div className="absolute top-[108px] left-0 right-0 text-center z-10">
+            <span className="inline-block bg-accent/15 backdrop-blur-sm border border-accent/30 rounded-full px-4 py-1.5 font-mono text-[10px] text-accent tracking-wider">
+              作品を枠内に合わせてください
+            </span>
           </div>
 
           {error && (
-            <div style={s.errorBanner}>{error}</div>
+            <div className="absolute bottom-[120px] left-5 right-5 bg-red-600/85 text-white rounded-xl px-4 py-3 text-[13px] text-center">
+              {error}
+            </div>
           )}
 
           {/* Bottom */}
-          <div style={s.bottom}>
-            <div style={s.thumbPlaceholder} />
-            <button style={s.shutter} onClick={handleShutter}>
-              <div style={s.shutterInner} />
+          <div className="absolute bottom-0 left-0 right-0 py-6 px-10 pb-12 flex items-center justify-between bg-gradient-to-t from-black/70 to-transparent z-10">
+            <div className="w-12 h-12 rounded-lg bg-white/10 border border-white/15" />
+            <button className="w-[72px] h-[72px] rounded-full bg-white/90 border-[3px] border-white/40 flex items-center justify-center" onClick={handleShutter}>
+              <div className="w-[60px] h-[60px] rounded-full bg-white" />
             </button>
-            <div style={{ width: 48 }} />
+            <div className="w-12" />
           </div>
         </div>
       )}
 
       {/* ── STATE: ANALYZING ── */}
       {state === 'analyzing' && (
-        <div style={s.analyzing}>
-          <div style={s.analyzeArtwork}>
+        <div className="min-h-screen bg-ink flex flex-col items-center justify-center p-10">
+          <div className="w-40 h-[210px] rounded-md mb-8 relative overflow-hidden bg-warm shadow-[0_12px_40px_rgba(0,0,0,0.5)]">
             <div style={s.pulseRing1} />
             <div style={s.pulseRing2} />
             <div style={s.pulseRing3} />
             {capturedImage && (
-              <img src={capturedImage} alt="captured" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 6 }} />
+              <img src={capturedImage} alt="captured" className="w-full h-full object-cover rounded-md" />
             )}
           </div>
-          <div style={s.analyzeLabel}>✦ Gemini が解析中</div>
-          <div style={s.analyzeTitle}>作品を読み解いています</div>
-          <div style={s.analyzeSub}>しばらくお待ちください</div>
-          <div style={s.progressBar}>
-            <div style={{ ...s.progressFill, width: `${((currentStep + 1) / STEPS.length) * 100}%`, transition: 'width 0.6s ease' }} />
+          <div className="font-mono text-[10px] tracking-[0.14em] text-accent uppercase mb-3">✦ Gemini が解析中</div>
+          <div className="font-serif text-[22px] text-paper font-light mb-1.5">作品を読み解いています</div>
+          <div className="text-[12px] text-paper/40 font-mono mb-7">しばらくお待ちください</div>
+          <div className="w-[200px] h-0.5 bg-white/10 rounded-sm overflow-hidden mb-5">
+            <div className="h-full bg-gradient-to-r from-accent to-[#e8a870] rounded-sm transition-all duration-[600ms] ease-out" style={{ width: `${((currentStep + 1) / STEPS.length) * 100}%` }} />
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div className="flex flex-col gap-2">
             {STEPS.map((step, i) => (
-              <div key={step} style={s.step}>
-                <span style={{
-                  ...s.stepDot,
-                  background: i <= currentStep ? 'var(--accent)' : 'rgba(255,255,255,0.2)',
-                  animation: i === currentStep && i < STEPS.length - 1 ? 'dotPulse 1s ease-in-out infinite' : 'none'
-                }} />
-                <span style={{
-                  fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.06em',
-                  color: i <= currentStep ? 'rgba(247,244,239,0.9)' : 'rgba(247,244,239,0.3)'
-                }}>{step}</span>
+              <div key={step} className="flex items-center gap-2">
+                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${i <= currentStep ? 'bg-accent' : 'bg-white/20'}`}
+                  style={{ animation: i === currentStep && i < STEPS.length - 1 ? 'dotPulse 1s ease-in-out infinite' : 'none' }} />
+                <span className={`font-mono text-[10px] tracking-wider ${i <= currentStep ? 'text-paper/90' : 'text-paper/30'}`}>
+                  {step}
+                </span>
               </div>
             ))}
           </div>
@@ -201,22 +201,24 @@ export default function CameraPage() {
 
       {/* ── STATE: RESULT ── */}
       {state === 'result' && guide && (
-        <div style={{ background: 'var(--paper)', minHeight: '100vh' }}>
+        <div className="bg-paper min-h-screen">
           {/* Captured image */}
-          <div style={s.resultHero}>
+          <div className="w-full h-[280px] relative overflow-hidden bg-warm">
             {capturedImage && (
-              <img src={capturedImage} alt="artwork" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <img src={capturedImage} alt="artwork" className="w-full h-full object-cover" />
             )}
-            <button style={s.resultBack} onClick={() => navigate(-1)}>←</button>
-            <button style={s.retake} onClick={handleRetake}>撮り直す</button>
-            <div style={s.detectedBadge}>
-              <span style={s.detectedDot} />
-              <span style={s.detectedText}>作品を検出</span>
-              <span style={s.detectedGenre}>{guide.genre}</span>
+            <button className="absolute top-4 left-4 w-9 h-9 bg-paper/85 rounded-full backdrop-blur-sm" onClick={() => navigate(-1)}>←</button>
+            <button className="absolute top-4 right-4 bg-paper/85 backdrop-blur-sm rounded-full px-3.5 py-2 font-mono text-[9px] tracking-wider uppercase" onClick={handleRetake}>
+              撮り直す
+            </button>
+            <div className="absolute bottom-3.5 left-1/2 -translate-x-1/2 bg-ink/75 backdrop-blur-sm rounded-full px-4 py-1.5 flex items-center gap-1.5 whitespace-nowrap">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
+              <span className="font-mono text-[9px] text-white/80">作品を検出</span>
+              <span className="font-mono text-[9px] text-accent">{guide.genre}</span>
             </div>
           </div>
 
-          <div style={s.resultBody}>
+          <div className="p-5 pb-[60px]">
             {/* Guide */}
             <div className="guide-card">
               <div className="guide-label">✦ AI 鑑賞ガイド</div>
@@ -235,10 +237,13 @@ export default function CameraPage() {
             </div>
 
             {/* Actions */}
-            <div style={{ display: 'flex', gap: 10 }}>
-              <button style={s.actionBtn} onClick={() => navigate('/')}>フィードへ</button>
-              <button style={{ ...s.actionBtn, background: 'var(--ink)', color: 'var(--paper)' }}
-                onClick={() => navigate('/exhibitions')}>展覧会を見る</button>
+            <div className="flex gap-2.5 mt-5">
+              <button className="flex-1 py-3 rounded-xl font-mono text-[10px] tracking-wider bg-warm text-ink" onClick={() => navigate('/')}>
+                フィードへ
+              </button>
+              <button className="flex-1 py-3 rounded-xl font-mono text-[10px] tracking-wider bg-ink text-paper" onClick={() => navigate('/exhibitions')}>
+                展覧会を見る
+              </button>
             </div>
           </div>
         </div>
@@ -248,8 +253,6 @@ export default function CameraPage() {
 }
 
 const s = {
-  cameraView: { width: '100%', height: '100vh', position: 'relative', overflow: 'hidden' },
-  video: { width: '100%', height: '100%', objectFit: 'cover', display: 'block' },
   scanOverlay: {
     position: 'absolute',
     top: '50%', left: '50%',
@@ -271,72 +274,7 @@ const s = {
     animation: 'scanMove 2.4s ease-in-out infinite',
     top: '50%',
   },
-  top: {
-    position: 'absolute', top: 0, left: 0, right: 0,
-    padding: '52px 20px 16px',
-    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-    background: 'linear-gradient(to bottom, rgba(0,0,0,0.6), transparent)',
-    zIndex: 10,
-  },
-  circleBtn: { width: 36, height: 36, background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '50%', fontSize: 16, color: 'white' },
-  topTitle: { fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.1em', color: 'rgba(255,255,255,0.8)', textTransform: 'uppercase' },
-  instruction: {
-    position: 'absolute', top: 108, left: 0, right: 0, textAlign: 'center', zIndex: 10,
-  },
-  instructionText: {
-    display: 'inline-block',
-    background: 'rgba(193,127,74,0.15)', backdropFilter: 'blur(8px)',
-    border: '1px solid rgba(193,127,74,0.3)', borderRadius: 20,
-    padding: '6px 16px', fontFamily: 'var(--font-mono)', fontSize: 10,
-    color: 'var(--accent)', letterSpacing: '0.06em',
-  },
-  errorBanner: {
-    position: 'absolute', bottom: 120, left: 20, right: 20,
-    background: 'rgba(192,57,43,0.85)', color: 'white',
-    borderRadius: 12, padding: '12px 16px', fontSize: 13,
-    textAlign: 'center',
-  },
-  bottom: {
-    position: 'absolute', bottom: 0, left: 0, right: 0,
-    padding: '24px 40px 48px',
-    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-    background: 'linear-gradient(to top, rgba(0,0,0,0.7), transparent)',
-    zIndex: 10,
-  },
-  thumbPlaceholder: { width: 48, height: 48, borderRadius: 8, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)' },
-  shutter: { width: 72, height: 72, borderRadius: '50%', background: 'rgba(255,255,255,0.9)', border: '3px solid rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' },
-  shutterInner: { width: 60, height: 60, borderRadius: '50%', background: 'white' },
-
-  analyzing: {
-    minHeight: '100vh', background: 'var(--ink)',
-    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-    padding: 40,
-  },
-  analyzeArtwork: {
-    width: 160, height: 210,
-    borderRadius: 6, marginBottom: 32,
-    position: 'relative', overflow: 'hidden',
-    background: 'var(--warm)',
-    boxShadow: '0 12px 40px rgba(0,0,0,0.5)',
-  },
   pulseRing1: { position: 'absolute', inset: -8, borderRadius: 10, border: '1.5px solid rgba(193,127,74,0.4)', animation: 'pulseRing 1.8s ease-out infinite' },
   pulseRing2: { position: 'absolute', inset: -16, borderRadius: 14, border: '1.5px solid rgba(193,127,74,0.25)', animation: 'pulseRing 1.8s ease-out infinite', animationDelay: '0.4s' },
   pulseRing3: { position: 'absolute', inset: -24, borderRadius: 18, border: '1.5px solid rgba(193,127,74,0.12)', animation: 'pulseRing 1.8s ease-out infinite', animationDelay: '0.8s' },
-  analyzeLabel: { fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.14em', color: 'var(--accent)', textTransform: 'uppercase', marginBottom: 12 },
-  analyzeTitle: { fontFamily: 'var(--font-serif)', fontSize: 22, color: 'var(--paper)', fontWeight: 300, marginBottom: 6 },
-  analyzeSub: { fontSize: 12, color: 'rgba(247,244,239,0.4)', fontFamily: 'var(--font-mono)', marginBottom: 28 },
-  progressBar: { width: 200, height: 2, background: 'rgba(255,255,255,0.1)', borderRadius: 2, overflow: 'hidden', marginBottom: 20 },
-  progressFill: { height: '100%', background: 'linear-gradient(90deg, var(--accent), #e8a870)', borderRadius: 2 },
-  step: { display: 'flex', alignItems: 'center', gap: 8 },
-  stepDot: { width: 6, height: 6, borderRadius: '50%', flexShrink: 0 },
-
-  resultHero: { width: '100%', height: 280, position: 'relative', overflow: 'hidden', background: 'var(--warm)' },
-  resultBack: { position: 'absolute', top: 16, left: 16, width: 36, height: 36, background: 'rgba(247,244,239,0.85)', border: 'none', borderRadius: '50%', fontSize: 16, backdropFilter: 'blur(8px)' },
-  retake: { position: 'absolute', top: 16, right: 16, background: 'rgba(247,244,239,0.85)', border: 'none', borderRadius: 20, padding: '8px 14px', fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.08em', backdropFilter: 'blur(8px)', textTransform: 'uppercase' },
-  detectedBadge: { position: 'absolute', bottom: 14, left: '50%', transform: 'translateX(-50%)', background: 'rgba(26,22,18,0.75)', backdropFilter: 'blur(8px)', borderRadius: 20, padding: '6px 16px', display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' },
-  detectedDot: { width: 6, height: 6, borderRadius: '50%', background: '#4ade80' },
-  detectedText: { fontFamily: 'var(--font-mono)', fontSize: 9, color: 'rgba(255,255,255,0.8)' },
-  detectedGenre: { fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--accent)' },
-  resultBody: { padding: '20px 20px 60px' },
-  actionBtn: { flex: 1, padding: 12, borderRadius: 12, fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.06em', border: 'none', background: 'var(--warm)', color: 'var(--ink)' },
 }

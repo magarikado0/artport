@@ -4,9 +4,9 @@ import { useAuth } from '../../hooks/useAuth'
 const NAV_ITEMS = [
   { icon: '⊞', label: 'フィード', path: '/' },
   { icon: '◻', label: '展覧会', path: '/exhibitions' },
-  { icon: '＋', label: '投稿', path: '/post' },
+  { icon: '📷', label: 'カメラ', path: '/camera' },
   { icon: '◯', label: '記録', path: '/portfolio' },
-  { icon: '△', label: 'マイページ', path: '/profile' },
+  { icon: '△', label: 'マイページ', path: '/mypage' },
 ]
 
 export default function BottomNav() {

@@ -52,6 +52,11 @@ export default function FeedPage() {
         </div>
       </div>
 
+      <button
+        style={{ position: 'absolute', top: 20, right: 20, padding: '8px 12px', fontSize: '12px', borderRadius: '8px', background: 'var(--accent)', color: 'white', border: 'none' }}
+        onClick={() => navigate('/post')}
+      >投稿</button>
+
       <div className="flex gap-2 px-4 pt-3 overflow-x-auto [scrollbar-width:none]">
         {GENRES.map(g => (
           <button key={g} className={`filter-tab ${activeGenre===g?'active':''}`} onClick={() => setActiveGenre(g)}>{g}</button>

@@ -11,6 +11,8 @@ import PostPage from './pages/PostPage'
 import PortfolioPage from './pages/PortfolioPage'
 import ArtistPage from './pages/ArtistPage'
 import ArtworkDetailPage from './pages/ArtworkDetailPage'
+import MyPage from './pages/MyPage'
+import CameraPage from './pages/CameraPage'
 
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth()
@@ -37,6 +39,8 @@ function AppRoutes() {
       <Route path="/portfolio" element={<PrivateRoute><PortfolioPage /></PrivateRoute>} />
       <Route path="/artists/:id" element={<PrivateRoute><ArtistPage /></PrivateRoute>} />
       <Route path="/artworks/:id" element={<PrivateRoute><ArtworkDetailPage /></PrivateRoute>} />
+      <Route path="/mypage" element={<PrivateRoute><MyPage /></PrivateRoute>} />
+      <Route path="/camera" element={<PrivateRoute><CameraPage /></PrivateRoute>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
