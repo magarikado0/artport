@@ -20,7 +20,7 @@ export default function ArtworkDetailPage() {
         setArtwork(data)
 
         // キャッシュ済みガイドがあればそのまま使う
-        if (data.guide) {
+        if (data?.guide) {
           setGuide(data.guide)
         }
       } catch (e) {
@@ -35,11 +35,16 @@ export default function ArtworkDetailPage() {
     setGuideLoading(true)
     try {
       const result = await generateViewingGuide(artwork.imageUrl, artwork.genre, artwork.title)
-      setGuide(result)
-      // Firestoreにキャッシュ保存
-      await updateDoc(doc(db, 'artworks', id), { guide: result })
+      if (result) {
+        setGuide(result)
+        // Firestoreにキャッシュ保存
+        await updateDoc(doc(db, 'artworks', id), { guide: result })
+      } else {
+        setError('ガイドの生成に失敗しました。もう一度お試しください。') // エラー時のメッセージ
+      }
     } catch (e) {
       console.error('Guide generation failed:', e)
+      setError('ガイドの生成中にエラーが発生しました。')
     } finally {
       setGuideLoading(false)
     }

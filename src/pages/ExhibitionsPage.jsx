@@ -16,7 +16,7 @@ export default function ExhibitionsPage() {
   const [exhibitions, setExhibitions] = useState([])
 
   useEffect(() => {
-    fetchExhibitions().then(d => setExhibitions(d.length ? d : DEMO)).catch(() => setExhibitions(DEMO))
+    fetchExhibitions().then(setExhibitions).catch(console.error)
   }, [])
 
   function fmtDate(ts) {

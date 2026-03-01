@@ -28,14 +28,7 @@ data:image/jpeg;base64,${base64}
     return JSON.parse(response.text.replace(/```json|```/g, '').trim())
   } catch (error) {
     console.error("Gemini API error:", error)
-    return {
-      core: 'この作品には、じっくり見ると発見がある。',
-      points: [
-        { num: '01', text: 'まず全体をゆっくり眺めてみてください。' },
-        { num: '02', text: '細部に目を移すと、また違う表情が見えてきます。' },
-        { num: '03', text: '一歩引いて、作品全体のバランスを感じてみてください。' },
-      ],
-    }
+    return null // エラー時に明示的にnullを返す
   }
 }
 

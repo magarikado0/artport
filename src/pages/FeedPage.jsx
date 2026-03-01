@@ -34,13 +34,12 @@ export default function FeedPage() {
     try {
       const genre = activeGenre === 'すべて' ? null : activeGenre
       const data = await fetchArtworks(genre)
-      console.log('Fetched artworks:', data)
-      setArtworks(data.length > 0 ? data : DEMO)
+      setArtworks(data)
     } catch (e) {
       console.error('Error loading artworks:', e)
-      setArtworks(DEMO)
+    } finally {
+      setLoading(false)
     }
-    finally { setLoading(false) }
   }
 
   return (
