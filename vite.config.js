@@ -13,7 +13,7 @@ export default defineConfig({
         description: 'アート発見プラットフォーム',
         theme_color: '#f7f4ef',
         background_color: '#f7f4ef',
-        display: 'standalone',
+        display: 'fullscreen', // ブラウザのUIを完全に非表示にする
         icons: [
           {
             src: '/icons/icon-192x192.png',
