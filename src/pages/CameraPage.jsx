@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { analyzeImageBase64 } from '../lib/gemini'
 
 const STEPS = ['作品ジャンルを検出', '構図・技法を分析', '鑑賞ガイドを生成中...', '展覧会情報を照合']
 
@@ -41,22 +42,30 @@ export default function CameraPage() {
     const canvas = canvasRef.current
     if (!video || !canvas) return
 
-    canvas.width = video.videoWidth
-    canvas.height = video.videoHeight
-    canvas.getContext('2d').drawImage(video, 0, 0)
+    // Geminiトークン削減のため1200px以内にリサイズ
+    const MAX = 1200
+    let w = video.videoWidth
+    let h = video.videoHeight
+    if (w > MAX || h > MAX) {
+      const ratio = Math.min(MAX / w, MAX / h)
+      w = Math.round(w * ratio)
+      h = Math.round(h * ratio)
+    }
+    canvas.width = w
+    canvas.height = h
+    canvas.getContext('2d').drawImage(video, 0, 0, w, h)
 
     const dataUrl = canvas.toDataURL('image/jpeg', 0.85)
+    console.log(`[CameraPage] キャプチャ: ${video.videoWidth}×${video.videoHeight}px → ${w}×${h}px`)
     setCapturedImage(dataUrl)
     stopCamera()
     setState('analyzing')
 
-    await analyzeWithGemini(dataUrl)
+    await analyzeImage(dataUrl)
   }
 
-  async function analyzeWithGemini(dataUrl) {
+  async function analyzeImage(dataUrl) {
     const base64 = dataUrl.split(',')[1]
-    const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`
 
     // ステップアニメーション
     for (let i = 0; i < STEPS.length - 1; i++) {
@@ -65,33 +74,8 @@ export default function CameraPage() {
     }
 
     try {
-      const prompt = `この作品画像を見て以下を返してください。
-
-1. ジャンル（書道/写真/陶芸/絵画/彫刻/その他のいずれか）
-2. 初めて見る人向けの鑑賞ガイド
-
-## 出力形式
-ジャンル: （ジャンル名）
-核心: （一文でこの作品の核心）
-01: （ポイント1・50〜80字）
-02: （ポイント2・50〜80字）
-03: （ポイント3・50〜80字）`
-
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{
-            parts: [
-              { inline_data: { mime_type: 'image/jpeg', data: base64 } },
-              { text: prompt }
-            ]
-          }]
-        })
-      })
-
-      const data = await res.json()
-      const text = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
+      const text = await analyzeImageBase64(base64)
+      if (!text) throw new Error('no response')
       const lines = text.split('\n').filter(Boolean)
 
       const parsed = {

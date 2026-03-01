@@ -130,7 +130,7 @@ export async function createArtwork(data, imageFile) {
   let imageUrl = ''
   if (imageFile) {
     const formData = new FormData()
-    formData.append('file', imageFile)
+    formData.append('file', imageFile, 'artwork.jpg')
     formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET)
     const response = await axios.post(CLOUDINARY_UPLOAD_URL, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
@@ -149,7 +149,7 @@ export async function createExhibition(data, coverFile) {
   let coverUrl = ''
   if (coverFile) {
     const formData = new FormData()
-    formData.append('file', coverFile)
+    formData.append('file', coverFile, 'cover.jpg')
     formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET)
     const response = await axios.post(CLOUDINARY_UPLOAD_URL, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
