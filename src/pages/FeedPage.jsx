@@ -69,10 +69,10 @@ export default function FeedPage() {
               const tall = a.tall || i%5===0
               return (
                 <div key={a.id} className={`artwork-card ${tall?'row-span-2':''}`} onClick={() => navigate(`/artworks/${a.id}`)}>
-                  <div className="w-full flex items-center justify-center overflow-hidden"
+                  <div className="w-full overflow-hidden flex items-center justify-center"
                     style={{aspectRatio: tall?'1/1.6':'1', background: BG[a.genre]||'linear-gradient(135deg,#e8e0d4,#d4ccc0)'}}>
                     {a.imageUrl
-                      ? <img src={a.imageUrl} alt={a.title} className="w-full h-full object-cover" />
+                      ? <img src={a.imageUrl} alt={a.title} className="w-full h-full object-contain" />
                       : <span className="text-5xl opacity-10 font-serif">{SYMBOLS[a.genre]||'🎨'}</span>
                     }
                   </div>

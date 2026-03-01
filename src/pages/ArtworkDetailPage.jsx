@@ -186,15 +186,19 @@ function ExhibitionLink({ exhibitionId, onClick }) {
 const styles = {
   hero: {
     width: '100%',
-    aspectRatio: '3/4',
-    background: 'linear-gradient(160deg, #e8e0d0, #d4c8b8)',
+    background: '#f0ebe5', // 他の部分の背景色にさらに寄せた色に変更
     position: 'relative',
     overflow: 'hidden',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 280,
+    maxHeight: 520,
   },
   heroImg: {
     width: '100%',
-    height: '100%',
-    objectFit: 'cover',
+    maxHeight: 520,
+    objectFit: 'contain',
     display: 'block',
   },
   heroPlaceholder: {
