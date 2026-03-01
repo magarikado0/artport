@@ -9,7 +9,7 @@ const DEMO_HISTORY = [
 ]
 
 export default function MyPage() {
-  const { user, logout } = useAuth()
+  const { userProfile, logout } = useAuth()
   const navigate = useNavigate()
 
   const handleLogout = async () => {
@@ -24,14 +24,14 @@ export default function MyPage() {
       {/* Header with profile */}
       <div className="px-5 pt-6 pb-4 bg-paper border-b border-border text-center">
         <div className="w-[80px] h-[80px] rounded-full bg-warm mx-auto mb-3 overflow-hidden border-[3px] border-paper shadow-[0_0_0_2px_#d4ccc2]">
-          {user?.avatarUrl ? (
-            <img src={user.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+          {userProfile?.avatarUrl ? (
+            <img src={userProfile.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-3xl">👤</div>
           )}
         </div>
-        <h1 className="font-serif text-[22px] mb-1 text-ink">{user?.name || 'ゲスト'}</h1>
-        <p className="font-mono text-[10px] text-muted tracking-wider mb-3">{user?.email || ''}</p>
+        <h1 className="font-serif text-[22px] mb-1 text-ink">{userProfile?.name || 'ゲスト'}</h1>
+        <p className="font-mono text-[10px] text-muted tracking-wider mb-3">{userProfile?.email || ''}</p>
         <div className="flex justify-center gap-6">
           {[{num:'12',label:'投稿'},{num:'47',label:'鑑賞'},{num:'8',label:'展覧会'}].map(s => (
             <div key={s.label}>
