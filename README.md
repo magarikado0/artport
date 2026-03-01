@@ -12,7 +12,17 @@ npm install
 ### 2. Firebase プロジェクトの設定
 .env.localファイルにFirebase Console から値を記入してください。
 
-### 4. 起動
+#### モックデータの使用
+開発環境でモックデータを使用する場合、`.env` ファイルに以下の設定を追加してください:
+
+```
+VITE_USE_MOCK_DATA=true
+```
+
+- `true`: FirebaseやGemini APIを使用せず、モックデータを利用します。
+- `false`: 実際のFirebaseやGemini APIを使用します。
+
+### 3. 起動
 ```bash
 npm run dev
 ```
