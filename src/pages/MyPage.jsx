@@ -9,8 +9,15 @@ const DEMO_HISTORY = [
 ]
 
 export default function MyPage() {
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
   const navigate = useNavigate()
+
+  const handleLogout = async () => {
+    if (confirm('ログアウトしますか？')) {
+      await logout()
+      navigate('/login')
+    }
+  }
 
   return (
     <div className="min-h-screen bg-paper flex flex-col">
@@ -59,6 +66,12 @@ export default function MyPage() {
               <span className="font-sans text-[14px] text-ink">鑑賞記録を見る</span>
             </div>
             <span className="text-muted">→</span>
+          </button>
+          <button onClick={handleLogout} className="w-full flex items-center justify-between bg-paper rounded-xl px-4 py-3.5 border border-border">
+            <div className="flex items-center gap-3">
+              <span className="text-lg">🚪</span>
+              <span className="font-sans text-[14px] text-muted">ログアウト</span>
+            </div>
           </button>
         </div>
       </div>
