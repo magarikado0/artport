@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './hooks/useAuth'
 import './styles/index.css'
 
@@ -28,6 +28,44 @@ function PrivateRoute({ children }) {
   return user ? children : <Navigate to="/login" replace />
 }
 
+// 匿名ユーザーはログイン画面へ誘導するガード
+function AuthRequiredRoute({ children }) {
+  const { user, loading } = useAuth()
+  const navigate = useNavigate()
+
+  if (loading) return null
+  if (!user) return <Navigate to="/login" replace />
+
+  // 匿名ユーザーの場合はログイン促進モーダルを表示
+  if (user.isAnonymous) {
+    return (
+      <div className="min-h-screen bg-paper flex flex-col items-center justify-center px-8">
+        <div className="bg-ink rounded-3xl p-8 w-full max-w-sm text-center">
+          <p className="font-mono text-[10px] tracking-[0.2em] text-accent uppercase mb-4">✦ ログインが必要です</p>
+          <h2 className="font-serif text-2xl text-paper font-light mb-3">この機能を使うには<br />ログインしてください</h2>
+          <p className="font-sans text-[13px] text-paper/50 mb-8 leading-relaxed">
+            投稿・展覧会作成はログイン済みのユーザーのみ利用できます
+          </p>
+          <button
+            onClick={() => navigate('/login')}
+            className="btn-primary w-full mb-3"
+          >
+            ログイン / 新規登録
+          </button>
+          <button
+            onClick={() => navigate(-1)}
+            className="btn-secondary w-full"
+          >
+            戻る
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return children
+}
+
 function AppRoutes() {
   return (
     <Routes>
@@ -35,9 +73,9 @@ function AppRoutes() {
       <Route path="/login/email" element={<EmailLoginPage />} />
       <Route path="/" element={<PrivateRoute><FeedPage /></PrivateRoute>} />
       <Route path="/exhibitions" element={<PrivateRoute><ExhibitionsPage /></PrivateRoute>} />
-      <Route path="/exhibitions/create" element={<PrivateRoute><ExhibitionCreatePage /></PrivateRoute>} />
+      <Route path="/exhibitions/create" element={<AuthRequiredRoute><ExhibitionCreatePage /></AuthRequiredRoute>} />
       <Route path="/exhibitions/:id" element={<PrivateRoute><ExhibitionDetailPage /></PrivateRoute>} />
-      <Route path="/post" element={<PrivateRoute><PostPage /></PrivateRoute>} />
+      <Route path="/post" element={<AuthRequiredRoute><PostPage /></AuthRequiredRoute>} />
       <Route path="/portfolio" element={<PrivateRoute><PortfolioPage /></PrivateRoute>} />
       <Route path="/artists/:id" element={<PrivateRoute><ArtistPage /></PrivateRoute>} />
       <Route path="/artworks/:id" element={<PrivateRoute><ArtworkDetailPage /></PrivateRoute>} />

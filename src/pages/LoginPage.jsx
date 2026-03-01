@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 
 export default function LoginPage() {
-  const { loginWithGoogle } = useAuth()
+  const { loginWithGoogle, loginAnonymously } = useAuth()
   const navigate = useNavigate()
 
   async function handleLogin() {
@@ -17,6 +17,16 @@ export default function LoginPage() {
   // メールアドレスログイン用の関数（仮実装）
   function handleEmailLogin() {
     navigate('/login/email')
+  }
+
+  // 匿名ログイン
+  async function handleAnonymousLogin() {
+    try {
+      await loginAnonymously()
+      navigate('/')
+    } catch (e) {
+      console.error(e)
+    }
   }
 
   return (
@@ -60,6 +70,20 @@ export default function LoginPage() {
             <path d="M2 6l7 4 7-4" />
           </svg>
           メールアドレスでログイン
+        </button>
+
+        {/* 区切り線 */}
+        <div className="flex items-center gap-3 w-full mb-4">
+          <div className="flex-1 h-px bg-paper/15" />
+          <span className="font-mono text-[9px] text-paper/30 tracking-wide">または</span>
+          <div className="flex-1 h-px bg-paper/15" />
+        </div>
+
+        <button
+          onClick={handleAnonymousLogin}
+          className="flex items-center gap-3 bg-transparent text-paper/50 rounded-2xl px-7 py-3 font-sans text-[13px] cursor-pointer border border-paper/15 mb-4 w-full justify-center hover:bg-paper/5 transition-colors"
+        >
+          ゲストとして見るだけ
         </button>
 
         <p className="font-mono text-[9px] text-paper/25 tracking-wide text-center leading-relaxed">

@@ -3,6 +3,7 @@ import {
   signInWithPopup,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  signInAnonymously,
   signOut,
   onAuthStateChanged,
 } from 'firebase/auth'
@@ -29,12 +30,13 @@ export function AuthProvider({ children }) {
           // 初回ログイン: ユーザーを作成
           const newProfile = {
             uid: firebaseUser.uid,
-            name: firebaseUser.displayName || '',
+            name: firebaseUser.displayName || (firebaseUser.isAnonymous ? 'ゲスト' : ''),
             email: firebaseUser.email || '',
             avatarUrl: firebaseUser.photoURL || '',
             role: 'viewer', // 'viewer' | 'artist'
             bio: '',
             genre: '',
+            isAnonymous: firebaseUser.isAnonymous || false,
             createdAt: new Date(),
           }
           await setDoc(docRef, newProfile)
@@ -70,10 +72,12 @@ export function AuthProvider({ children }) {
     return userCredential
   }
   
+  const loginAnonymously = () => signInAnonymously(auth)
+
   const logout = () => signOut(auth)
 
   return (
-    <AuthContext.Provider value={{ user, userProfile, loading, loginWithGoogle, loginWithEmail, signupWithEmail, logout }}>
+    <AuthContext.Provider value={{ user, userProfile, loading, loginWithGoogle, loginWithEmail, signupWithEmail, loginAnonymously, logout }}>
       {children}
     </AuthContext.Provider>
   )
