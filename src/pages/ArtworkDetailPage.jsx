@@ -105,7 +105,6 @@ export default function ArtworkDetailPage() {
                   ))}
                 </div>
               )}
-              <div className="guide-ai-badge">✦ Gemini により生成</div>
             </>
           ) : (
             <button

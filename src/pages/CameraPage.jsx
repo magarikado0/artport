@@ -217,7 +217,6 @@ export default function CameraPage() {
                   ))}
                 </div>
               )}
-              <div className="guide-ai-badge">✦ Gemini により生成</div>
             </div>
 
             {/* Actions */}
