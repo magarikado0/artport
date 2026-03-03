@@ -11,11 +11,12 @@ const HISTORY = [
 export default function PortfolioPage() {
   const { userProfile } = useAuth()
   return (
-    <div className="min-h-screen bg-paper flex flex-col">
+    <div className="h-screen bg-paper flex flex-col">
       <div className="app-header">
         <span className="app-logo">鑑賞の記録</span>
       </div>
 
+      <div className="flex-1 overflow-y-auto">
       {/* Taste card */}
       <div className="px-5 pt-4">
         <div className="bg-ink rounded-2xl p-5 relative overflow-hidden">
@@ -59,8 +60,8 @@ export default function PortfolioPage() {
           ))}
         </div>
       </div>
+      </div>
 
-      <div className="flex-1" />
       <BottomNav />
     </div>
   )

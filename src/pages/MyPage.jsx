@@ -20,7 +20,7 @@ export default function MyPage() {
   }
 
   return (
-    <div className="min-h-screen bg-paper flex flex-col">
+    <div className="h-screen bg-paper flex flex-col">
       {/* Header with profile */}
       <div className="px-5 pt-6 pb-4 bg-paper border-b border-border text-center">
         <div className="w-[80px] h-[80px] rounded-full bg-warm mx-auto mb-3 overflow-hidden border-[3px] border-paper shadow-[0_0_0_2px_#d4ccc2]">
@@ -42,6 +42,7 @@ export default function MyPage() {
         </div>
       </div>
 
+      <div className="flex-1 overflow-y-auto">
       {/* Menu section */}
       <div className="px-5 pt-4">
         <p className="section-title">✦ メニュー</p>
@@ -94,7 +95,8 @@ export default function MyPage() {
         </div>
       </div>
 
-      <div className="flex-1" />
+      </div>
+
       <BottomNav />
     </div>
   )

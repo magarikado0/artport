@@ -48,13 +48,14 @@ export default function FeedPage() {
         <span className="app-logo">Art<span className="text-accent">port</span></span>
       </div>
 
-      <div className="flex gap-2 px-4 pt-3 overflow-x-auto [scrollbar-width:none]">
-        {GENRES.map(g => (
-          <button key={g} className={`filter-tab ${activeGenre===g?'active':''}`} onClick={() => setActiveGenre(g)}>{g}</button>
-        ))}
-      </div>
+      <div className="flex-1 overflow-y-auto">
+        <div className="flex gap-2 px-4 pt-3 overflow-x-auto [scrollbar-width:none]">
+          {GENRES.map(g => (
+            <button key={g} className={`filter-tab ${activeGenre===g?'active':''}`} onClick={() => setActiveGenre(g)}>{g}</button>
+          ))}
+        </div>
 
-      <div className="flex-1 p-3 grid grid-cols-2 gap-2.5 content-start overflow-y-auto">
+        <div className="p-3 grid grid-cols-2 gap-2.5 content-start">
         {loading
           ? Array(6).fill(0).map((_,i) => (
               <div key={i} className={`artwork-card animate-pulse ${i%5===0?'row-span-2':''}`}>
@@ -81,6 +82,7 @@ export default function FeedPage() {
               )
             })
         }
+        </div>
       </div>
 
       <BottomNav />

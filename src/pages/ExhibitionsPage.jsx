@@ -26,18 +26,19 @@ export default function ExhibitionsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-paper flex flex-col">
+    <div className="h-screen bg-paper flex flex-col">
       <div className="app-header">
         <span className="app-logo">展覧会</span>
       </div>
 
-      <div className="flex gap-2 px-4 pt-3 overflow-x-auto [scrollbar-width:none]">
-        {FILTERS.map(f => (
-          <button key={f} className={`filter-tab ${activeFilter===f?'active':''}`} onClick={() => setActiveFilter(f)}>{f}</button>
-        ))}
-      </div>
+      <div className="flex-1 overflow-y-auto">
+        <div className="flex gap-2 px-4 pt-3 overflow-x-auto [scrollbar-width:none]">
+          {FILTERS.map(f => (
+            <button key={f} className={`filter-tab ${activeFilter===f?'active':''}`} onClick={() => setActiveFilter(f)}>{f}</button>
+          ))}
+        </div>
 
-      <div className="flex-1 p-4 space-y-3">
+        <div className="p-4 space-y-3">
         {exhibitions.map(ex => (
           <div key={ex.id} className="bg-white rounded-2xl overflow-hidden shadow-sm cursor-pointer flex" onClick={() => navigate(`/exhibitions/${ex.id}`)}>
             {/* テキスト（左） */}
@@ -78,6 +79,7 @@ export default function ExhibitionsPage() {
         >
           ＋ 展覧会を作成する
         </button>
+        </div>
       </div>
 
       <BottomNav />
