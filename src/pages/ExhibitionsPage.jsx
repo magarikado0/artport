@@ -40,30 +40,34 @@ export default function ExhibitionsPage() {
 
       <div className="flex-1 p-4 space-y-3">
         {exhibitions.map(ex => (
-          <div key={ex.id} className="bg-white rounded-2xl overflow-hidden shadow-sm cursor-pointer" onClick={() => navigate(`/exhibitions/${ex.id}`)}>
-            <div className="w-full h-40 flex items-center justify-center text-5xl"
-              style={{background: ex.coverBg || 'linear-gradient(135deg,#e8e0d0,#d4c8b4)'}}>
-              {ex.symbol || ex.coverUrl
-                ? ex.coverUrl ? <img src={ex.coverUrl} className="w-full h-full object-cover" /> : ex.symbol
-                : '🖼'}
-            </div>
-            <div className="p-4">
-              <div className="flex gap-2 flex-wrap mb-2">
-                {(ex.genre||[]).map(g => <span key={g} className="genre-tag">{g}</span>)}
-                <span className={`genre-tag ${ex.status==='開催中'?'!bg-green-50 !text-green-600':'!bg-orange-50 !text-orange-500'}`}>
-                  {ex.status || '開催中'}
-                </span>
+          <div key={ex.id} className="bg-white rounded-2xl overflow-hidden shadow-sm cursor-pointer flex" onClick={() => navigate(`/exhibitions/${ex.id}`)}>
+            {/* テキスト（左） */}
+            <div className="p-3 flex flex-col justify-between flex-1 min-w-0">
+              <div>
+                <div className="flex gap-1.5 flex-wrap mb-1.5">
+                  {(ex.genre||[]).map(g => <span key={g} className="genre-tag">{g}</span>)}
+                  <span className={`genre-tag ${ex.status==='開催中'?'!bg-green-50 !text-green-600':'!bg-orange-50 !text-orange-500'}`}>
+                    {ex.status || '開催中'}
+                  </span>
+                </div>
+                <h3 className="font-serif text-[15px] leading-snug mb-1 line-clamp-2">{ex.title}</h3>
+                <p className="font-mono text-[10px] text-muted line-clamp-1">📍 {ex.venue}</p>
               </div>
-              <h3 className="font-serif text-[18px] mb-1">{ex.title}</h3>
-              <p className="font-mono text-[10px] text-muted mb-3">📍 {ex.venue}</p>
-              <div className="flex justify-between items-center">
-                <span className="font-mono text-[11px] text-muted">
+              <div className="flex justify-between items-center mt-2">
+                <span className="font-mono text-[10px] text-muted">
                   {fmtDate(ex.startDate)} – {fmtDate(ex.endDate)}
                 </span>
                 <span className="font-mono text-[10px] text-accent">
                   作品 {ex.artworkCount || 0}点
                 </span>
               </div>
+            </div>
+            {/* サムネイル（右） */}
+            <div className="w-28 shrink-0 flex items-center justify-center text-4xl"
+              style={{background: ex.coverBg || 'linear-gradient(135deg,#e8e0d0,#d4c8b4)'}}>
+              {ex.coverUrl
+                ? <img src={ex.coverUrl} alt={ex.title} className="w-full h-full object-cover" />
+                : <span>{ex.symbol || '🖼'}</span>}
             </div>
           </div>
         ))}
