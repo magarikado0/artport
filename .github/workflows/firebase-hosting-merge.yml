@@ -22,8 +22,8 @@ jobs:
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
           VITE_GEMINI_API_KEY: ${{ secrets.VITE_GEMINI_API_KEY }}
           VITE_QWEN_API_KEY: ${{ secrets.VITE_QWEN_API_KEY }}
-          VITE_AI_PROVIDER: $VITE_AI_PROVIDER
-          VITE_USE_MOCK_DATA: $VITE_USE_MOCK_DATA
+          VITE_AI_PROVIDER: ${{ vars.VITE_AI_PROVIDER }}
+          VITE_USE_MOCK_DATA: ${{ vars.VITE_USE_MOCK_DATA }}
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
