@@ -136,15 +136,6 @@ export default function ExhibitionCreatePage() {
             value={form.description} onChange={e => setForm(p=>({...p,description:e.target.value}))} />
         </div>
 
-        {/* Gemini banner */}
-        <div className="bg-[#f0e6d8] border border-accent/25 rounded-xl p-3.5 flex gap-3 items-start">
-          <span className="text-lg mt-0.5">✦</span>
-          <div>
-            <p className="font-mono text-[9px] tracking-wide text-[#7a5030] uppercase mb-1">Gemini が自動生成します</p>
-            <p className="text-[12px] text-[#7a5030] leading-relaxed">出展作品が登録されると、展覧会全体の「空気感」をAIが言語化してページに表示します。</p>
-          </div>
-        </div>
-
         {/* Actions */}
         <button onClick={() => handleSubmit(false)} disabled={saving}
           className="btn-primary disabled:opacity-50">
