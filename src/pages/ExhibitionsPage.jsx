@@ -29,7 +29,6 @@ export default function ExhibitionsPage() {
     <div className="min-h-screen bg-paper flex flex-col">
       <div className="app-header">
         <span className="app-logo">展覧会</span>
-        <button className="w-9 h-9 bg-warm rounded-full flex items-center justify-center">🔍</button>
       </div>
 
       <div className="flex gap-2 px-4 pt-3 overflow-x-auto [scrollbar-width:none]">
