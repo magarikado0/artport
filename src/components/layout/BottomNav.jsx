@@ -67,7 +67,7 @@ export default function BottomNav() {
             <circle cx="12" cy="13" r="4" />
           </svg>
         </button>
-        <span className="nav-label -mt-3">カメラ</span>
+        <span className="-mt-3 font-mono text-[10px] tracking-[0.12em] font-semibold text-accent">✦ AIガイド</span>
       </div>
 
       {/* 右2つ */}
