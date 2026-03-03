@@ -46,42 +46,54 @@ export default function MyPage() {
       {/* Menu section */}
       <div className="px-5 pt-4">
         <p className="section-title">✦ メニュー</p>
-        <div className="space-y-2">
-          <button onClick={() => navigate('/post')} className="w-full flex items-center justify-between bg-warm rounded-xl px-4 py-3.5 border border-border">
-            <div className="flex items-center gap-3">
-              <span className="text-lg">✏️</span>
-              <span className="font-sans text-[14px] text-ink">作品を投稿</span>
-            </div>
-            <span className="text-muted">→</span>
+        <div className="grid grid-cols-2 gap-2.5">
+          {/* 作品を投稿 */}
+          <button onClick={() => navigate('/post')}
+            className="flex flex-col items-center justify-center gap-2 bg-warm rounded-2xl py-5 border border-border active:scale-95 transition-transform">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-ink">
+              <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+              <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+            </svg>
+            <span className="font-mono text-[11px] text-ink tracking-wide">作品を投稿</span>
           </button>
-          <button onClick={() => navigate('/exhibitions/create')} className="w-full flex items-center justify-between bg-warm rounded-xl px-4 py-3.5 border border-border">
-            <div className="flex items-center gap-3">
-              <span className="text-lg">🎨</span>
-              <span className="font-sans text-[14px] text-ink">展覧会を作成</span>
-            </div>
-            <span className="text-muted">→</span>
+          {/* 展覧会を作成 */}
+          <button onClick={() => navigate('/exhibitions/create')}
+            className="flex flex-col items-center justify-center gap-2 bg-warm rounded-2xl py-5 border border-border active:scale-95 transition-transform">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-ink">
+              <path d="M3 9l9-6 9 6v11a1 1 0 01-1 1H4a1 1 0 01-1-1V9z" />
+              <rect x="9" y="14" width="6" height="7" />
+            </svg>
+            <span className="font-mono text-[11px] text-ink tracking-wide">展覧会を作成</span>
           </button>
-          <button onClick={() => navigate('/portfolio')} className="w-full flex items-center justify-between bg-warm rounded-xl px-4 py-3.5 border border-border">
-            <div className="flex items-center gap-3">
-              <span className="text-lg">📖</span>
-              <span className="font-sans text-[14px] text-ink">鑑賞記録を見る</span>
-            </div>
-            <span className="text-muted">→</span>
+          {/* 鑑賞記録 */}
+          <button onClick={() => navigate('/portfolio')}
+            className="flex flex-col items-center justify-center gap-2 bg-warm rounded-2xl py-5 border border-border active:scale-95 transition-transform">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-ink">
+              <path d="M12 21C7 16 3 12.4 3 8.5A5.5 5.5 0 0112 4.09 5.5 5.5 0 0121 8.5c0 3.9-4 7.5-9 12.5z" />
+            </svg>
+            <span className="font-mono text-[11px] text-ink tracking-wide">鑑賞記録</span>
           </button>
+          {/* ログアウト or サインアップ */}
           {user?.isAnonymous ? (
-            <button onClick={() => navigate('/login')} className="w-full flex items-center justify-between bg-accent rounded-xl px-4 py-3.5">
-              <div className="flex items-center gap-3">
-                <span className="text-lg">✨</span>
-                <span className="font-sans text-[14px] text-paper font-medium">アカウント登録 / ログイン</span>
-              </div>
-              <span className="text-paper/70">→</span>
+            <button onClick={() => navigate('/login')}
+              className="flex flex-col items-center justify-center gap-2 bg-accent rounded-2xl py-5 active:scale-95 transition-transform">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+                <line x1="12" y1="11" x2="12" y2="17" />
+                <line x1="9" y1="14" x2="15" y2="14" />
+              </svg>
+              <span className="font-mono text-[11px] text-paper tracking-wide">登録 / ログイン</span>
             </button>
           ) : (
-            <button onClick={handleLogout} className="w-full flex items-center justify-between bg-paper rounded-xl px-4 py-3.5 border border-border">
-              <div className="flex items-center gap-3">
-                <span className="text-lg">🚪</span>
-                <span className="font-sans text-[14px] text-muted">ログアウト</span>
-              </div>
+            <button onClick={handleLogout}
+              className="flex flex-col items-center justify-center gap-2 bg-warm rounded-2xl py-5 border border-border active:scale-95 transition-transform">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-muted">
+                <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
+              <span className="font-mono text-[11px] text-muted tracking-wide">ログアウト</span>
             </button>
           )}
         </div>
