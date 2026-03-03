@@ -1,5 +1,6 @@
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from './hooks/useAuth'
+import OnboardingOverlay from './components/OnboardingOverlay'
 import './styles/index.css'
 
 import LoginPage from './pages/LoginPage'
@@ -67,7 +68,10 @@ function AuthRequiredRoute({ children }) {
 }
 
 function AppRoutes() {
+  const location = useLocation()
+  const isLoginPage = location.pathname.startsWith('/login')
   return (
+    <OnboardingOverlay skip={isLoginPage}>
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/login/email" element={<EmailLoginPage />} />
@@ -83,6 +87,7 @@ function AppRoutes() {
       <Route path="/camera" element={<PrivateRoute><CameraPage /></PrivateRoute>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </OnboardingOverlay>
   )
 }
 
