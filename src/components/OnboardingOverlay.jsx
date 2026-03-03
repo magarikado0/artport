@@ -3,23 +3,31 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 
 export default function OnboardingOverlay({ children, skip = false }) {
-  const { user } = useAuth()
-  // ログインしたユーザーのUIDを記録。未ログイン or 別UID → オンボーディング表示
-  const [acknowledgedUid, setAcknowledgedUid] = useState(null)
+  const { user, loading } = useAuth()
+  // sessionStorageで保持 → リロードしても再表示しない
+  const [acknowledgedUid, setAcknowledgedUid] = useState(
+    () => sessionStorage.getItem('artport_onboarded_uid')
+  )
   const navigate = useNavigate()
 
-  // ログアウト時にリセット → 次回ログイン時に再表示
+  // loading完了後にユーザーがいない（＝ログアウト確定）ときのみクリア
+  // ※loadingチェックがないとページロード直後のuser=nullでクリアされてしまう
   useEffect(() => {
-    if (!user) setAcknowledgedUid(null)
-  }, [user])
+    if (!loading && !user) {
+      sessionStorage.removeItem('artport_onboarded_uid')
+      setAcknowledgedUid(null)
+    }
+  }, [user, loading])
 
   function finish(goCamera = false) {
-    setAcknowledgedUid(user?.uid ?? null)
+    const uid = user?.uid ?? ''
+    sessionStorage.setItem('artport_onboarded_uid', uid)
+    setAcknowledgedUid(uid)
     if (goCamera) navigate('/camera')
   }
 
-  // ログイン済み・かつ今回まだ確認していない場合に表示
-  const showOnboarding = !skip && !!user && user.uid !== acknowledgedUid
+  // loading中 / 未ログイン / 確認済みUIDと一致 → 表示しない
+  const showOnboarding = !loading && !skip && !!user && user.uid !== acknowledgedUid
 
   if (!showOnboarding) return children
 
