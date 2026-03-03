@@ -9,7 +9,7 @@ const DEMO_HISTORY = [
 ]
 
 export default function MyPage() {
-  const { userProfile, logout } = useAuth()
+  const { user, userProfile, logout } = useAuth()
   const navigate = useNavigate()
 
   const handleLogout = async () => {
@@ -68,12 +68,22 @@ export default function MyPage() {
             </div>
             <span className="text-muted">→</span>
           </button>
-          <button onClick={handleLogout} className="w-full flex items-center justify-between bg-paper rounded-xl px-4 py-3.5 border border-border">
-            <div className="flex items-center gap-3">
-              <span className="text-lg">🚪</span>
-              <span className="font-sans text-[14px] text-muted">ログアウト</span>
-            </div>
-          </button>
+          {user?.isAnonymous ? (
+            <button onClick={() => navigate('/login')} className="w-full flex items-center justify-between bg-accent rounded-xl px-4 py-3.5">
+              <div className="flex items-center gap-3">
+                <span className="text-lg">✨</span>
+                <span className="font-sans text-[14px] text-paper font-medium">アカウント登録 / ログイン</span>
+              </div>
+              <span className="text-paper/70">→</span>
+            </button>
+          ) : (
+            <button onClick={handleLogout} className="w-full flex items-center justify-between bg-paper rounded-xl px-4 py-3.5 border border-border">
+              <div className="flex items-center gap-3">
+                <span className="text-lg">🚪</span>
+                <span className="font-sans text-[14px] text-muted">ログアウト</span>
+              </div>
+            </button>
+          )}
         </div>
       </div>
 
