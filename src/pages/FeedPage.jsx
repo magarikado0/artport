@@ -43,7 +43,7 @@ export default function FeedPage() {
   }
 
   return (
-    <div className="min-h-screen bg-paper flex flex-col">
+    <div className="h-screen bg-paper flex flex-col">
       <div className="app-header">
         <span className="app-logo">Art<span className="text-accent">port</span></span>
       </div>
@@ -54,7 +54,7 @@ export default function FeedPage() {
         ))}
       </div>
 
-      <div className="flex-1 p-3 grid grid-cols-2 gap-2.5 content-start">
+      <div className="flex-1 p-3 grid grid-cols-2 gap-2.5 content-start overflow-y-auto">
         {loading
           ? Array(6).fill(0).map((_,i) => (
               <div key={i} className={`artwork-card animate-pulse ${i%5===0?'row-span-2':''}`}>
