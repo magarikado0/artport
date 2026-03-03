@@ -58,29 +58,26 @@ export default function FeedPage() {
         <div className="p-3 grid grid-cols-2 gap-2.5 content-start">
         {loading
           ? Array(6).fill(0).map((_,i) => (
-              <div key={i} className={`artwork-card animate-pulse ${i%5===0?'row-span-2':''}`}>
-                <div className="bg-warm" style={{aspectRatio: i%5===0?'1/1.6':'1'}} />
+              <div key={i} className="artwork-card animate-pulse">
+                <div className="bg-warm" style={{aspectRatio: '3/4'}} />
               </div>
             ))
-          : artworks.map((a,i) => {
-              const tall = a.tall || i%5===0
-              return (
-                <div key={a.id} className={`artwork-card ${tall?'row-span-2':''}`} onClick={() => navigate(`/artworks/${a.id}`)}>
-                  <div className="w-full overflow-hidden flex items-center justify-center"
-                    style={{aspectRatio: tall?'1/1.6':'1', background: BG[a.genre]||'linear-gradient(135deg,#e8e0d4,#d4ccc0)'}}>
-                    {a.imageUrl
-                      ? <img src={a.imageUrl} alt={a.title} className="w-full h-full object-contain" />
-                      : <span className="text-5xl opacity-10 font-serif">{SYMBOLS[a.genre]||'🎨'}</span>
-                    }
-                  </div>
-                  <div className="p-2.5 pb-3">
-                    <p className="font-serif text-[13px] font-medium leading-tight mb-0.5">{a.title}</p>
-                    <p className="font-mono text-[10px] text-muted mb-1.5">{a.artistName}</p>
-                    <span className="genre-tag">{a.genre}</span>
-                  </div>
+          : artworks.map((a) => (
+              <div key={a.id} className="artwork-card" onClick={() => navigate(`/artworks/${a.id}`)}>
+                <div className="w-full overflow-hidden flex items-center justify-center"
+                  style={{aspectRatio: '3/4', background: BG[a.genre]||'linear-gradient(135deg,#e8e0d4,#d4ccc0)'}}>
+                  {a.imageUrl
+                    ? <img src={a.imageUrl} alt={a.title} className="w-full h-full object-contain" />
+                    : <span className="text-5xl opacity-10 font-serif">{SYMBOLS[a.genre]||'🎨'}</span>
+                  }
                 </div>
-              )
-            })
+                <div className="p-2.5 pb-3">
+                  <p className="font-serif text-[13px] font-medium leading-tight mb-0.5">{a.title}</p>
+                  <p className="font-mono text-[10px] text-muted mb-1.5">{a.artistName}</p>
+                  <span className="genre-tag">{a.genre}</span>
+                </div>
+              </div>
+            ))
         }
         </div>
       </div>
