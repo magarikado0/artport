@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { analyzeImageBase64 } from '../lib/gemini'
+import { analyzeImageBase64, generateQuestionsBase64 } from '../lib/gemini'
 
-const STEPS = ['作品ジャンルを検出', '構図・技法を分析', '鑑賞ガイドを生成中...', '展覧会情報を照合']
+const GUIDE_STEPS = ['作品ジャンルを検出', '構図・技法を分析', '鑑賞ガイドを生成中...', '展覧会情報を照合']
+const QUESTION_STEPS = ['作品ジャンルを検出', '構図・技法を分析', '気づきの質問を生成中...']
 
 export default function CameraPage() {
   const navigate = useNavigate()
@@ -10,11 +11,21 @@ export default function CameraPage() {
   const canvasRef = useRef(null)
   const streamRef = useRef(null)
 
-  const [state, setState] = useState('camera') // camera | analyzing | result
+  // camera | mode-select | analyzing | result | analyzing-questions | questions | summary
+  const [state, setState] = useState('camera')
   const [capturedImage, setCapturedImage] = useState(null)
+  const [capturedBase64, setCapturedBase64] = useState(null)
   const [guide, setGuide] = useState(null)
+  const [questionData, setQuestionData] = useState(null) // { genre, guide, questions }
+  const [answers, setAnswers] = useState([null, null, null]) // [{choice, freeText}]
+  const [revealedUpTo, setRevealedUpTo] = useState(0) // 0〜2：その番号の質問を現在アクティブ表示
+  const [selectedChoice, setSelectedChoice] = useState(null)
+  const [freeText, setFreeText] = useState('')
+  const [showExplanation, setShowExplanation] = useState(false)
   const [currentStep, setCurrentStep] = useState(0)
+  const [steps, setSteps] = useState(GUIDE_STEPS)
   const [error, setError] = useState(null)
+  const questionRefs = useRef([null, null, null]) // 各質問へのscroll用ref
 
   useEffect(() => {
     startCamera()
@@ -57,24 +68,28 @@ export default function CameraPage() {
 
     const dataUrl = canvas.toDataURL('image/jpeg', 0.85)
     console.log(`[CameraPage] キャプチャ: ${video.videoWidth}×${video.videoHeight}px → ${w}×${h}px`)
+    const base64 = dataUrl.split(',')[1]
     setCapturedImage(dataUrl)
+    setCapturedBase64(base64)
     stopCamera()
-    setState('analyzing')
-
-    await analyzeImage(dataUrl)
+    // 撮影後はモード選択画面へ
+    setState('mode-select')
   }
 
-  async function analyzeImage(dataUrl) {
-    const base64 = dataUrl.split(',')[1]
+  // ── ガイドモード ───────────────────────────────────
+  async function handleSelectGuide() {
+    setSteps(GUIDE_STEPS)
+    setCurrentStep(0)
+    setState('analyzing')
 
     // ステップアニメーション
-    for (let i = 0; i < STEPS.length - 1; i++) {
+    for (let i = 0; i < GUIDE_STEPS.length - 1; i++) {
       await new Promise(r => setTimeout(r, 800))
       setCurrentStep(i + 1)
     }
 
     try {
-      const text = await analyzeImageBase64(base64)
+      const text = await analyzeImageBase64(capturedBase64)
       if (!text) throw new Error('no response')
       const lines = text.split('\n').filter(Boolean)
 
@@ -91,16 +106,76 @@ export default function CameraPage() {
       setState('result')
     } catch (e) {
       setError('解析に失敗しました。もう一度お試しください。')
-      setState('camera')
-      startCamera()
+      setState('mode-select')
+    }
+  }
+
+  // ── 質問モード ─────────────────────────────────────
+  async function handleSelectQuestions() {
+    setSteps(QUESTION_STEPS)
+    setCurrentStep(0)
+    setState('analyzing-questions')
+
+    // ステップアニメーション
+    for (let i = 0; i < QUESTION_STEPS.length - 1; i++) {
+      await new Promise(r => setTimeout(r, 800))
+      setCurrentStep(i + 1)
+    }
+
+    try {
+      const data = await generateQuestionsBase64(capturedBase64)
+      if (!data) throw new Error('no response')
+      setQuestionData(data)
+      setAnswers([null, null, null])
+      setRevealedUpTo(0)
+      setSelectedChoice(null)
+      setFreeText('')
+      setShowExplanation(false)
+      setState('questions')
+    } catch (e) {
+      setError('質問の生成に失敗しました。もう一度お試しください。')
+      setState('mode-select')
+    }
+  }
+
+  // ── 質問回答・次の質問へ ─────────────────────────────
+  function handleConfirmAnswer() {
+    // 現在の回答を保存
+    const next = [...answers]
+    next[revealedUpTo] = { choice: selectedChoice, freeText }
+    setAnswers(next)
+    setShowExplanation(true)
+  }
+
+  function handleAdvance() {
+    if (revealedUpTo < 2) {
+      const nextIdx = revealedUpTo + 1
+      setRevealedUpTo(nextIdx)
+      setSelectedChoice(null)
+      setFreeText('')
+      setShowExplanation(false)
+      // 少し遅延してから新しい質問へスクロール
+      setTimeout(() => {
+        questionRefs.current[nextIdx]?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 80)
+    } else {
+      setState('summary')
     }
   }
 
   function handleRetake() {
     setState('camera')
     setCapturedImage(null)
+    setCapturedBase64(null)
     setGuide(null)
+    setQuestionData(null)
+    setAnswers([null, null, null])
+    setRevealedUpTo(0)
+    setSelectedChoice(null)
+    setFreeText('')
+    setShowExplanation(false)
     setCurrentStep(0)
+    setError(null)
     startCamera()
   }
 
@@ -152,8 +227,58 @@ export default function CameraPage() {
         </div>
       )}
 
-      {/* ── STATE: ANALYZING ── */}
-      {state === 'analyzing' && (
+      {/* ── STATE: MODE-SELECT ── */}
+      {state === 'mode-select' && capturedImage && (
+        <div className="min-h-screen bg-ink flex flex-col">
+          {/* 撮影画像 */}
+          <div className="w-full h-[300px] relative overflow-hidden">
+            <img src={capturedImage} alt="captured" className="w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-ink" />
+            <button className="absolute top-[52px] left-4 w-9 h-9 bg-black/40 border border-white/20 rounded-full text-white backdrop-blur-sm"
+              onClick={handleRetake}>←</button>
+            <div className="absolute top-[52px] left-1/2 -translate-x-1/2 bg-black/40 backdrop-blur-sm border border-white/15 rounded-full px-4 py-1.5">
+              <span className="font-mono text-[10px] tracking-[0.1em] text-white/80 uppercase">❖ 作品を検出</span>
+            </div>
+          </div>
+
+          {/* モード選択 */}
+          <div className="flex-1 flex flex-col items-center justify-center px-6 pb-12 -mt-4">
+            <div className="font-serif text-[24px] text-paper font-light mb-2">どのように鑑賞しますか？</div>
+            <div className="font-mono text-[11px] text-paper/40 tracking-wider mb-8">モードを選んでください</div>
+
+            {error && (
+              <div className="w-full bg-red-600/85 text-white rounded-xl px-4 py-3 text-[13px] text-center mb-5">
+                {error}
+              </div>
+            )}
+
+            <div className="w-full flex flex-col gap-4">
+              {/* AIガイド */}
+              <button
+                className="w-full rounded-2xl bg-accent/10 border border-accent/30 p-5 text-left active:scale-[0.98] transition-transform"
+                onClick={handleSelectGuide}
+              >
+                <div className="font-mono text-[10px] tracking-[0.12em] text-accent uppercase mb-2">❖ AI 鑑賞ガイド</div>
+                <div className="font-serif text-[18px] text-paper font-light mb-1">ガイドを読む</div>
+                <div className="font-mono text-[11px] text-paper/50">AIが作品のポイント3つを解説します</div>
+              </button>
+
+              {/* インタラクティブ質問 */}
+              <button
+                className="w-full rounded-2xl bg-paper/5 border border-paper/15 p-5 text-left active:scale-[0.98] transition-transform"
+                onClick={handleSelectQuestions}
+              >
+                <div className="font-mono text-[10px] tracking-[0.12em] text-paper/50 uppercase mb-2">□ インタラクティブ</div>
+                <div className="font-serif text-[18px] text-paper font-light mb-1">質問に答える</div>
+                <div className="font-mono text-[11px] text-paper/50">3つの質問に答えてまとめをもらう</div>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── STATE: ANALYZING / ANALYZING-QUESTIONS / ANALYZING-SUMMARY ── */}
+      {(state === 'analyzing' || state === 'analyzing-questions') && (
         <div className="min-h-screen bg-ink flex flex-col items-center justify-center p-10">
           <div className="w-40 h-[210px] rounded-md mb-8 relative overflow-hidden bg-warm shadow-[0_12px_40px_rgba(0,0,0,0.5)]">
             <div style={s.pulseRing1} />
@@ -167,13 +292,13 @@ export default function CameraPage() {
           <div className="font-serif text-[22px] text-paper font-light mb-1.5">作品を読み解いています</div>
           <div className="text-[12px] text-paper/40 font-mono mb-7">しばらくお待ちください</div>
           <div className="w-[200px] h-0.5 bg-white/10 rounded-sm overflow-hidden mb-5">
-            <div className="h-full bg-gradient-to-r from-accent to-[#e8a870] rounded-sm transition-all duration-[600ms] ease-out" style={{ width: `${((currentStep + 1) / STEPS.length) * 100}%` }} />
+            <div className="h-full bg-gradient-to-r from-accent to-[#e8a870] rounded-sm transition-all duration-[600ms] ease-out" style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }} />
           </div>
           <div className="flex flex-col gap-2">
-            {STEPS.map((step, i) => (
+            {steps.map((step, i) => (
               <div key={step} className="flex items-center gap-2">
                 <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${i <= currentStep ? 'bg-accent' : 'bg-white/20'}`}
-                  style={{ animation: i === currentStep && i < STEPS.length - 1 ? 'dotPulse 1s ease-in-out infinite' : 'none' }} />
+                  style={{ animation: i === currentStep && i < steps.length - 1 ? 'dotPulse 1s ease-in-out infinite' : 'none' }} />
                 <span className={`font-mono text-[10px] tracking-wider ${i <= currentStep ? 'text-paper/90' : 'text-paper/30'}`}>
                   {step}
                 </span>
@@ -221,6 +346,208 @@ export default function CameraPage() {
 
             {/* Actions */}
             <div className="flex gap-2.5 mt-5">
+              <button className="flex-1 py-3 rounded-xl font-mono text-[10px] tracking-wider bg-warm text-ink" onClick={() => navigate('/')}>
+                フィードへ
+              </button>
+              <button className="flex-1 py-3 rounded-xl font-mono text-[10px] tracking-wider bg-ink text-paper" onClick={() => navigate('/exhibitions')}>
+                展覧会を見る
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── STATE: QUESTIONS ── */}
+      {state === 'questions' && questionData && (
+        <div className="bg-paper min-h-screen flex flex-col">
+          {/* 撮影画像 + ヘッダー（固定） */}
+          <div className="w-full h-[160px] relative overflow-hidden bg-warm flex-shrink-0">
+            {capturedImage && (
+              <img src={capturedImage} alt="artwork" className="w-full h-full object-cover" />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-b from-black/30 to-paper/95" />
+            <button className="absolute top-[52px] left-4 w-9 h-9 bg-paper/85 rounded-full backdrop-blur-sm"
+              onClick={() => setState('mode-select')}>←</button>
+            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-ink/75 backdrop-blur-sm rounded-full px-4 py-1.5 flex items-center gap-1.5 whitespace-nowrap">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
+              <span className="font-mono text-[9px] text-white/80">{questionData.genre}</span>
+            </div>
+          </div>
+
+          {/* スクロールエリア */}
+          <div className="flex-1 overflow-y-auto p-5 pb-[80px]">
+            {/* 鑑賞ガイド */}
+            {questionData.guide && (
+              <div className="guide-card mb-5">
+                <div className="guide-label">✦ 鑑賞ガイド</div>
+                <div className="guide-text text-[13px] leading-relaxed">{questionData.guide}</div>
+              </div>
+            )}
+
+            {/* 質問リスト（revealedUpTo以下のみ表示） */}
+            {questionData.questions.map((q, i) => {
+              if (i > revealedUpTo) return null // まだ表示しない
+
+              const isActive = i === revealedUpTo
+              const isAnswered = i < revealedUpTo
+              const ans = answers[i]
+
+              return (
+                <div
+                  key={q.num}
+                  ref={el => { questionRefs.current[i] = el }}
+                  className="mb-4"
+                >
+                  {/* ── 圧縮ビュー（回答済み） ── */}
+                  {isAnswered && (
+                    <div className="rounded-2xl border border-border overflow-hidden">
+                      <div className="flex items-center gap-3 bg-warm px-4 py-3">
+                        <span className="font-mono text-[10px] text-accent font-bold flex-shrink-0">{q.num}</span>
+                        <span className="font-sans text-[13px] text-ink flex-1 leading-snug">{q.text}</span>
+                        <span className="w-4 h-4 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0">
+                          <span className="text-[8px] text-accent">✓</span>
+                        </span>
+                      </div>
+                      {(ans?.choice || ans?.freeText) && (
+                        <div className="bg-paper px-4 py-2 border-t border-border">
+                          {ans.choice && <span className="font-sans text-[12px] text-muted">› {ans.choice}</span>}
+                          {ans.freeText && <p className="font-sans text-[11px] text-muted/70 italic mt-0.5">{ans.freeText}</p>}
+                        </div>
+                      )}
+                      <div className="bg-ink/95 px-4 py-2 border-t border-accent/20">
+                        <span className="font-mono text-[9px] text-accent mr-1">✦</span>
+                        <span className="font-sans text-[11px] text-paper/75">{q.explanation}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ── アクティブ質問（現在回答中） ── */}
+                  {isActive && (
+                    <div>
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="font-mono text-[11px] text-accent font-bold">{q.num}</span>
+                        <span className="font-sans text-[16px] text-ink font-medium leading-snug">{q.text}</span>
+                      </div>
+
+                      {/* 選択肢 */}
+                      <div className="flex flex-col gap-2.5 mb-4">
+                        {q.choices.map((choice, ci) => (
+                          <button
+                            key={ci}
+                            disabled={showExplanation}
+                            onClick={() => !showExplanation && setSelectedChoice(choice)}
+                            className={`w-full text-left px-4 py-3 rounded-xl border font-sans text-[14px] transition-all ${
+                              selectedChoice === choice
+                                ? 'bg-accent/10 border-accent text-ink'
+                                : 'bg-warm border-border text-ink active:bg-warm/70'
+                            } ${showExplanation && selectedChoice !== choice ? 'opacity-40' : ''}`}
+                          >
+                            <span className="font-mono text-[10px] text-muted mr-2">{String.fromCharCode(65 + ci)}</span>
+                            {choice}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* 自由記述 */}
+                      <textarea
+                        className="w-full bg-warm border border-border rounded-xl px-4 py-3 font-sans text-[13px] text-ink placeholder:text-muted/60 resize-none focus:outline-none focus:ring-2 focus:ring-accent/40 mb-4"
+                        rows={2}
+                        placeholder="上の選択肢以外の答えがあれば自由に（これだけでも回答可）"
+                        disabled={showExplanation}
+                        value={freeText}
+                        onChange={e => setFreeText(e.target.value)}
+                      />
+
+                      {/* 解説カード */}
+                      {showExplanation && (
+                        <div className="bg-ink rounded-xl px-5 py-4 mb-4 border border-accent/20">
+                          <div className="font-mono text-[9px] tracking-[0.12em] text-accent uppercase mb-2">✦ 解説</div>
+                          <div className="font-sans text-[14px] text-paper leading-relaxed">{q.explanation}</div>
+                        </div>
+                      )}
+
+                      {/* ボタン */}
+                      {!showExplanation ? (
+                        <button
+                          className="btn-primary w-full"
+                          disabled={!selectedChoice && !freeText.trim()}
+                          onClick={handleConfirmAnswer}
+                        >
+                          回答する
+                        </button>
+                      ) : (
+                        <button
+                          className="btn-primary w-full"
+                          onClick={handleAdvance}
+                        >
+                          {i === 2 ? '結果を見る' : '次の質問へ →'}
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ── STATE: SUMMARY ── */}
+      {state === 'summary' && questionData && (
+        <div className="bg-paper min-h-screen">
+          {/* 撮影画像 */}
+          <div className="w-full h-[220px] relative overflow-hidden bg-warm">
+            {capturedImage && (
+              <img src={capturedImage} alt="artwork" className="w-full h-full object-cover" />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-paper/90" />
+            <button className="absolute top-[52px] left-4 w-9 h-9 bg-paper/85 rounded-full backdrop-blur-sm" onClick={() => navigate(-1)}>←</button>
+            <button className="absolute top-[52px] right-4 bg-paper/85 backdrop-blur-sm rounded-full px-3.5 py-2 font-mono text-[9px] tracking-wider uppercase" onClick={handleRetake}>
+              撮り直す
+            </button>
+            <div className="absolute bottom-3.5 left-1/2 -translate-x-1/2 bg-ink/75 backdrop-blur-sm rounded-full px-4 py-1.5 flex items-center gap-1.5 whitespace-nowrap">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
+              <span className="font-mono text-[9px] text-white/80">{questionData.genre}</span>
+              <span className="font-mono text-[9px] text-paper/40">全問回答済</span>
+            </div>
+          </div>
+
+          <div className="p-5 pb-[80px]">
+            <div className="font-mono text-[10px] tracking-[0.12em] text-accent uppercase mb-1">❖ 展右記録</div>
+            <div className="font-serif text-[22px] text-ink font-light mb-5">鑑賞の足跡</div>
+
+            {questionData.questions.map((q, i) => {
+              const ans = answers[i]
+              return (
+                <div key={q.num} className="mb-5 rounded-2xl border border-border overflow-hidden">
+                  {/* 質問 */}
+                  <div className="bg-warm px-4 pt-3 pb-2">
+                    <span className="font-mono text-[10px] text-accent mr-1.5">{q.num}</span>
+                    <span className="font-sans text-[13px] text-ink">{q.text}</span>
+                  </div>
+                  {/* 回答 */}
+                  <div className="bg-paper px-4 py-2 border-t border-border">
+                    {ans?.choice && (
+                      <div className="font-sans text-[13px] text-ink mb-1">› {ans.choice}</div>
+                    )}
+                    {ans?.freeText && (
+                      <div className="font-sans text-[12px] text-muted italic">{ans.freeText}</div>
+                    )}
+                    {!ans?.choice && !ans?.freeText && (
+                      <div className="font-sans text-[12px] text-muted">（回答なし）</div>
+                    )}
+                  </div>
+                  {/* 解説 */}
+                  <div className="bg-ink/95 px-4 py-2.5 border-t border-accent/20">
+                    <span className="font-mono text-[9px] text-accent mr-1.5">❖</span>
+                    <span className="font-sans text-[12px] text-paper/80">{q.explanation}</span>
+                  </div>
+                </div>
+              )
+            })}
+
+            {/* アクション */}
+            <div className="flex gap-2.5 mt-4">
               <button className="flex-1 py-3 rounded-xl font-mono text-[10px] tracking-wider bg-warm text-ink" onClick={() => navigate('/')}>
                 フィードへ
               </button>
