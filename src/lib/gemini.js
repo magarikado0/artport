@@ -151,7 +151,7 @@ ${pairs}
 - 箇条書きで、全体の字数は100字程度
 
 ## 出力（テキストのみ、JSONなし）`
-}
+} 
 
 // カメラページ用：Q&Aからまとめを生成する
 export async function generateSummaryFromAnswers(base64, qas, genre) {
