@@ -110,6 +110,59 @@ export async function analyzeImageBase64(base64) {
   }
 }
 
+// ── 質問生成プロンプト ───────────────────────────────
+const QUESTION_PROMPT = `あなたはアートの案内人です。この作品画像を初めて見る人が自然に興味を持てる簡潔な鑑賞ガイドと、答えを探しながら作品をじっくり見たくなるような選択式の質問を3問作ってください。
+
+## 条件
+- 1枚目に事実ベースで作品の簡単な説明（１文）
+- 正解を知らなくても直感で答えられる問い
+- 答えを探すために作品をよく見る必要がある問い
+- 専門知識不要、中学生でも答えられる
+- 各問に選択肢3つと短文自由記述欄を用意する
+- 回答後に「なぜそうなのか」の解説を添える（40字以内）
+- ジャンルも特定してください（書道/写真/陶芸/絵画/彫刻/その他）
+
+## 出力（JSONのみ）
+{"genre":"ジャンル名","guide":"簡潔な鑑賞ガイド（2〜3文）","questions":[{"num":"01","text":"質問文","choices":["選択肢A","選択肢B","選択肢C"],"explanation":"解説（40字以内）"},{"num":"02","text":"質問文","choices":["選択肢A","選択肢B","選択肢C"],"explanation":"解説（40字以内）"},{"num":"03","text":"質問文","choices":["選択肢A","選択肢B","選択肢C"],"explanation":"解説（40字以内）"}]}`
+
+// カメラページ用：質問を生成する
+export async function generateQuestionsBase64(base64) {
+  try {
+    const text = await generate(base64, QUESTION_PROMPT)
+    return JSON.parse(text.replace(/```json|```/g, '').trim())
+  } catch (error) {
+    console.error('[AI] generateQuestionsBase64 エラー:', error)
+    return null
+  }
+}
+
+// ── まとめ生成プロンプト ─────────────────────────────
+function buildSummaryPrompt(qas, genre) {
+  const pairs = qas.map(qa => `Q: ${qa.question}\nA: ${qa.answer}`).join('\n\n')
+  return `あなたはアートの案内人です。この作品を見た鑑賞者が以下の質問に答えました。
+
+${pairs}
+
+この回答をもとに、鑑賞者への「まとめのメッセージ」を生成してください。
+
+## 条件
+- 鑑賞者が感じ取ったことを肯定的に言語化して伝える
+- 専門用語なし、温かみのある文体
+- 箇条書きで、全体の字数は100字程度
+
+## 出力（テキストのみ、JSONなし）`
+} 
+
+// カメラページ用：Q&Aからまとめを生成する
+export async function generateSummaryFromAnswers(base64, qas, genre) {
+  try {
+    return await generate(base64, buildSummaryPrompt(qas, genre))
+  } catch (error) {
+    console.error('[AI] generateSummaryFromAnswers エラー:', error)
+    return null
+  }
+}
+
 async function urlToBase64(url) {
   const res = await fetch(url)
   const blob = await res.blob()
