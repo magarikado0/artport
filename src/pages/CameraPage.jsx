@@ -11,10 +11,16 @@ export default function CameraPage() {
   const streamRef = useRef(null)
 
   const [state, setState] = useState('camera') // camera | analyzing | result
+  const [mode, setMode] = useState('default')  // default | questions
   const [capturedImage, setCapturedImage] = useState(null)
   const [guide, setGuide] = useState(null)
   const [currentStep, setCurrentStep] = useState(0)
   const [error, setError] = useState(null)
+
+  // questions モード用
+  const [currentQ, setCurrentQ] = useState(0)        // 現在表示中の問い番号
+  const [answers, setAnswers] = useState({})           // { "01": "選択肢A", ... }
+  const [revealed, setRevealed] = useState({})         // { "01": true, ... } 解説表示済み
 
   useEffect(() => {
     startCamera()
@@ -74,22 +80,34 @@ export default function CameraPage() {
     }
 
     try {
-      const text = await analyzeImageBase64(base64)
+      const text = await analyzeImageBase64(base64, mode)
       if (!text) throw new Error('no response')
-      const lines = text.split('\n').filter(Boolean)
 
-      const parsed = {
-        genre: lines.find(l => l.startsWith('ジャンル:'))?.replace('ジャンル:', '').trim() || '不明',
-        core: lines.find(l => l.startsWith('核心:'))?.replace('核心:', '').trim() || '',
-        points: ['01', '02', '03'].map(n => ({
-          num: n,
-          text: lines.find(l => l.startsWith(`${n}:`))?.replace(`${n}:`, '').trim() || ''
-        })).filter(p => p.text)
+      if (mode === 'default') {
+        // プレーンテキストをパース
+        const lines = text.split('\n').filter(Boolean)
+        const parsed = {
+          type: 'default',
+          genre: lines.find(l => l.startsWith('ジャンル:'))?.replace('ジャンル:', '').trim() || '不明',
+          core: lines.find(l => l.startsWith('核心:'))?.replace('核心:', '').trim() || '',
+          points: ['01', '02', '03'].map(n => ({
+            num: n,
+            text: lines.find(l => l.startsWith(`${n}:`))?.replace(`${n}:`, '').trim() || ''
+          })).filter(p => p.text)
+        }
+        setGuide(parsed)
+      } else {
+        // JSON をパース
+        const parsed = JSON.parse(text.replace(/```json|```/g, '').trim())
+        setGuide({ type: 'questions', ...parsed })
+        setCurrentQ(0)
+        setAnswers({})
+        setRevealed({})
       }
 
-      setGuide(parsed)
       setState('result')
     } catch (e) {
+      console.error('[CameraPage] analyzeImage error:', e)
       setError('解析に失敗しました。もう一度お試しください。')
       setState('camera')
       startCamera()
@@ -101,7 +119,112 @@ export default function CameraPage() {
     setCapturedImage(null)
     setGuide(null)
     setCurrentStep(0)
+    setCurrentQ(0)
+    setAnswers({})
+    setRevealed({})
     startCamera()
+  }
+
+  function handleAnswer(num, option) {
+    setAnswers(prev => ({ ...prev, [num]: option }))
+  }
+
+  function handleReveal(num) {
+    setRevealed(prev => ({ ...prev, [num]: true }))
+  }
+
+  function handleNextQ() {
+    setCurrentQ(q => q + 1)
+  }
+
+  // ── result: questions モードの1問表示
+  function renderQuestion(q) {
+    const answered = answers[q.num]
+    const isRevealed = revealed[q.num]
+    const isLast = guide.questions && currentQ === guide.questions.length - 1
+
+    return (
+      <div key={q.num} className="guide-card">
+        <div className="guide-label">✦ 問い {q.num}</div>
+        <div className="guide-text" style={{ fontSize: 17, marginBottom: 14 }}>{q.question}</div>
+
+        {/* 選択肢 */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
+          {q.options.map((opt, i) => {
+            const isSelected = answered === opt
+            return (
+              <button
+                key={i}
+                onClick={() => handleAnswer(q.num, opt)}
+                disabled={!!answered}
+                style={{
+                  textAlign: 'left',
+                  padding: '10px 14px',
+                  borderRadius: 10,
+                  border: isSelected ? '1.5px solid var(--accent)' : '1px solid rgba(0,0,0,0.12)',
+                  background: isSelected ? 'rgba(193,127,74,0.08)' : 'rgba(0,0,0,0.03)',
+                  fontSize: 13,
+                  color: 'var(--ink)',
+                  cursor: answered ? 'default' : 'pointer',
+                  fontFamily: 'var(--font-serif)',
+                  opacity: answered && !isSelected ? 0.45 : 1,
+                  transition: 'all 0.2s',
+                }}
+              >
+                {opt}
+              </button>
+            )
+          })}
+        </div>
+
+        {/* 解説ボタン or 解説 */}
+        {answered && !isRevealed && (
+          <button
+            onClick={() => handleReveal(q.num)}
+            style={{
+              width: '100%', padding: '10px', borderRadius: 10,
+              background: 'var(--ink)', color: 'var(--paper)',
+              fontFamily: 'var(--font-mono)', fontSize: 11,
+              letterSpacing: '0.08em', border: 'none', cursor: 'pointer', marginBottom: 8
+            }}
+          >
+            解説を見る
+          </button>
+        )}
+        {isRevealed && (
+          <div style={{
+            background: 'rgba(193,127,74,0.07)', border: '1px solid rgba(193,127,74,0.25)',
+            borderRadius: 10, padding: '10px 14px', fontSize: 13,
+            color: 'var(--ink)', lineHeight: 1.7, marginBottom: 8
+          }}>
+            {q.explanation}
+          </div>
+        )}
+
+        {/* 次へ or 完了 */}
+        {isRevealed && (
+          isLast ? (
+            <div style={{ textAlign: 'center', marginTop: 6, fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--accent)', letterSpacing: '0.1em' }}>
+              ✦ すべての問いに答えました
+            </div>
+          ) : (
+            <button
+              onClick={handleNextQ}
+              style={{
+                width: '100%', padding: '10px', borderRadius: 10,
+                background: 'rgba(193,127,74,0.12)', color: 'var(--ink)',
+                fontFamily: 'var(--font-mono)', fontSize: 11,
+                letterSpacing: '0.08em', border: '1px solid rgba(193,127,74,0.3)',
+                cursor: 'pointer'
+              }}
+            >
+              次の問いへ →
+            </button>
+          )
+        )}
+        <div className="guide-ai-badge">✦ Gemini により生成</div>
+      </div>
+    )
   }
 
   return (
@@ -115,7 +238,7 @@ export default function CameraPage() {
 
           {/* Scan frame overlay */}
           <div style={s.scanOverlay}>
-            {['tl','tr','bl','br'].map(pos => (
+            {['tl', 'tr', 'bl', 'br'].map(pos => (
               <div key={pos} style={{ ...s.corner, ...s.corners[pos] }} />
             ))}
             <div style={s.scanLine} />
@@ -133,6 +256,32 @@ export default function CameraPage() {
             <span className="inline-block bg-accent/15 backdrop-blur-sm border border-accent/30 rounded-full px-4 py-1.5 font-mono text-[10px] text-accent tracking-wider">
               作品を枠内に合わせてください
             </span>
+          </div>
+
+          {/* モード切り替えタブ */}
+          <div className="absolute top-[148px] left-0 right-0 flex justify-center z-10 mt-3">
+            <div style={{
+              display: 'flex', gap: 6, background: 'rgba(0,0,0,0.45)',
+              backdropFilter: 'blur(8px)', borderRadius: 99, padding: '4px 6px',
+              border: '1px solid rgba(255,255,255,0.12)'
+            }}>
+              {[['default', '📄 説明'], ['questions', '❓ 質問']].map(([val, label]) => (
+                <button
+                  key={val}
+                  onClick={() => setMode(val)}
+                  style={{
+                    padding: '5px 14px', borderRadius: 99, fontSize: 11,
+                    fontFamily: 'var(--font-mono)', letterSpacing: '0.06em',
+                    border: 'none', cursor: 'pointer', transition: 'all 0.2s',
+                    background: mode === val ? 'var(--accent)' : 'transparent',
+                    color: mode === val ? '#fff' : 'rgba(255,255,255,0.6)',
+                    fontWeight: mode === val ? 600 : 400,
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
           </div>
 
           {error && (
@@ -195,30 +344,46 @@ export default function CameraPage() {
             <button className="absolute top-4 right-4 bg-paper/85 backdrop-blur-sm rounded-full px-3.5 py-2 font-mono text-[9px] tracking-wider uppercase" onClick={handleRetake}>
               撮り直す
             </button>
-            <div className="absolute bottom-3.5 left-1/2 -translate-x-1/2 bg-ink/75 backdrop-blur-sm rounded-full px-4 py-1.5 flex items-center gap-1.5 whitespace-nowrap">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
-              <span className="font-mono text-[9px] text-white/80">作品を検出</span>
-              <span className="font-mono text-[9px] text-accent">{guide.genre}</span>
-            </div>
+            {guide.type === 'default' && (
+              <div className="absolute bottom-3.5 left-1/2 -translate-x-1/2 bg-ink/75 backdrop-blur-sm rounded-full px-4 py-1.5 flex items-center gap-1.5 whitespace-nowrap">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
+                <span className="font-mono text-[9px] text-white/80">作品を検出</span>
+                <span className="font-mono text-[9px] text-accent">{guide.genre}</span>
+              </div>
+            )}
+            {guide.type === 'questions' && (
+              <div className="absolute bottom-3.5 left-1/2 -translate-x-1/2 bg-ink/75 backdrop-blur-sm rounded-full px-4 py-1.5 flex items-center gap-1.5 whitespace-nowrap">
+                <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+                <span className="font-mono text-[9px] text-white/80">❓ 質問モード</span>
+                <span className="font-mono text-[9px] text-accent">{currentQ + 1} / {guide.questions?.length ?? 3}</span>
+              </div>
+            )}
           </div>
 
           <div className="p-5 pb-[60px]">
-            {/* Guide */}
-            <div className="guide-card">
-              <div className="guide-label">✦ AI 鑑賞ガイド</div>
-              {guide.core && <div className="guide-text">{guide.core}</div>}
-              {guide.points.length > 0 && (
-                <div className="guide-points">
-                  {guide.points.map(p => (
-                    <div className="guide-point" key={p.num}>
-                      <span className="guide-point-num">{p.num}</span>
-                      <span>{p.text}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-              <div className="guide-ai-badge">✦ Gemini により生成</div>
-            </div>
+            {/* default: ガイド表示 */}
+            {guide.type === 'default' && (
+              <div className="guide-card">
+                <div className="guide-label">✦ AI 鑑賞ガイド</div>
+                {guide.core && <div className="guide-text">{guide.core}</div>}
+                {guide.points.length > 0 && (
+                  <div className="guide-points">
+                    {guide.points.map(p => (
+                      <div className="guide-point" key={p.num}>
+                        <span className="guide-point-num">{p.num}</span>
+                        <span>{p.text}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div className="guide-ai-badge">✦ Gemini により生成</div>
+              </div>
+            )}
+
+            {/* questions: 1問ずつ表示 */}
+            {guide.type === 'questions' && guide.questions && (
+              renderQuestion(guide.questions[currentQ])
+            )}
 
             {/* Actions */}
             <div className="flex gap-2.5 mt-5">

@@ -74,7 +74,11 @@ function buildGuidePrompt(genre, title) {
 {"core":"核心一文（30字以内）","points":[{"num":"01","text":"ポイント1"},{"num":"02","text":"ポイント2"},{"num":"03","text":"ポイント3"}]}`
 }
 
-const CAMERA_PROMPT = `この作品画像を見て以下を返してください。
+
+
+function buildCameraPrompt(option) {
+  if (option === 'default') {
+    return `この作品画像を見て以下を返してください。
 
 1. ジャンル（書道/写真/陶芸/絵画/彫刻/その他のいずれか）
 2. 初めて見る人向けの鑑賞ガイド
@@ -84,7 +88,19 @@ const CAMERA_PROMPT = `この作品画像を見て以下を返してください
 核心: （一文でこの作品の核心）
 01: （ポイント1・50〜80字）
 02: （ポイント2・50〜80字）
-03: （ポイント3・50〜80字）`
+03: （ポイント3・50〜80字）` ;
+  } else if (option === 'questions') {
+    return `あなたはアートの案内人です。この作品画像を初めて見る人が自然に興味を持てる簡潔な鑑賞ガイドと、答えを探しながら作品をじっくり見たくなるような選択式の質問を3問作ってください。
+
+  ## 条件
+  - 正解を知らなくても直感で答えられる問い
+  - 答えを探すために作品をよく見る必要がある問い
+  - 専門知識不要、中学生でも答えられる
+  - 各問に選択肢3つと短文自由記述欄を用意する
+  - 回答後に「なぜそうなのか」の解説を添える　必ずしも回答に共感する必要はない（40字以内）
+  - 順番に表示と回答を行う`;
+  }
+}
 
 // ── エクスポート関数 ──────────────────────────────
 
@@ -100,10 +116,10 @@ export async function generateViewingGuide(imageUrl, genre, title) {
   }
 }
 
-// カメラページ用（base64 を直接渡す）
-export async function analyzeImageBase64(base64) {
+// カメラページ用（base64 を直接渡す、option: 'default' | 'questions'）
+export async function analyzeImageBase64(base64, option = 'questions') {
   try {
-    return await generate(base64, CAMERA_PROMPT)
+    return await generate(base64, buildCameraPrompt(option))
   } catch (error) {
     console.error(`[AI] analyzeImageBase64 エラー:`, error)
     return null
