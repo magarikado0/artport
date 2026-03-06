@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 const SLIDES = [
   {
@@ -26,15 +27,17 @@ const SLIDES = [
 export default function OnboardingModal({ onClose }) {
   const [current, setCurrent] = useState(0)
   const touchStartX = useRef(null)
+  const navigate = useNavigate()
 
   const isLast = current === SLIDES.length - 1
 
   const next = () => {
-    if (isLast) {
-      onClose()
-    } else {
-      setCurrent(i => i + 1)
-    }
+    if (!isLast) setCurrent(i => i + 1)
+  }
+
+  const handleClose = (goCamera = false) => {
+    onClose()
+    if (goCamera) navigate('/camera')
   }
 
   const handleTouchStart = (e) => {
@@ -84,17 +87,25 @@ export default function OnboardingModal({ onClose }) {
 
         {/* ボタン */}
         {isLast ? (
-          <button
-            className="w-full py-3.5 bg-ink text-paper rounded-2xl font-mono text-[11px] tracking-wider active:scale-[0.98] transition-transform"
-            onClick={onClose}
-          >
-            はじめる
-          </button>
+          <div className="flex flex-col gap-2">
+            <button
+              className="w-full py-3.5 bg-accent text-paper rounded-2xl font-mono text-[11px] tracking-wider active:scale-[0.98] transition-transform"
+              onClick={() => handleClose(true)}
+            >
+              📷　カメラを使ってみる
+            </button>
+            <button
+              className="w-full py-2 font-mono text-[10px] tracking-[0.15em] text-muted active:opacity-60"
+              onClick={() => handleClose(false)}
+            >
+              スキップ
+            </button>
+          </div>
         ) : (
           <div className="flex gap-3">
             <button
               className="flex-1 py-3.5 border border-border text-muted rounded-2xl font-mono text-[11px] tracking-wider active:scale-[0.98] transition-transform"
-              onClick={onClose}
+              onClick={() => handleClose(false)}
             >
               スキップ
             </button>
