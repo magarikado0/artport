@@ -33,10 +33,11 @@ export function AuthProvider({ children }) {
             name: firebaseUser.displayName || (firebaseUser.isAnonymous ? 'ゲスト' : ''),
             email: firebaseUser.email || '',
             avatarUrl: firebaseUser.photoURL || '',
-            role: 'viewer', // 'viewer' | 'artist'
+            role: 'viewer',
             bio: '',
             genre: '',
             isAnonymous: firebaseUser.isAnonymous || false,
+            onboardingDone: false,
             createdAt: new Date(),
           }
           await setDoc(docRef, newProfile)
@@ -66,6 +67,7 @@ export function AuthProvider({ children }) {
       role: 'viewer',
       bio: '',
       genre: '',
+      onboardingDone: false,
       createdAt: new Date(),
     }
     await setDoc(doc(db, 'users', userCredential.user.uid), newProfile)

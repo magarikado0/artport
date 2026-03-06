@@ -1,6 +1,8 @@
+import { useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from './hooks/useAuth'
 import OnboardingOverlay from './components/OnboardingOverlay'
+import OnboardingModal from './components/ui/OnboardingModal'
 import './styles/index.css'
 
 import LoginPage from './pages/LoginPage'
@@ -69,27 +71,67 @@ function AuthRequiredRoute({ children }) {
 }
 
 function AppRoutes() {
+  const { user, loading } = useAuth()
   const location = useLocation()
   const isLoginPage = location.pathname.startsWith('/login')
+  const [showOnboarding, setShowOnboarding] = useState(false)
+  const [dismissedModalUid, setDismissedModalUid] = useState(
+    () => sessionStorage.getItem('artport_onboarding_modal_dismissed_uid')
+  )
+
+  const shouldShowOnboardingModal =
+    !loading &&
+    !isLoginPage &&
+    !!user &&
+    user.uid !== sessionStorage.getItem('artport_onboarded_uid') &&
+    user.uid !== dismissedModalUid
+
+  useEffect(() => {
+    if (shouldShowOnboardingModal) {
+      setShowOnboarding(true)
+    } else {
+      setShowOnboarding(false)
+    }
+  }, [shouldShowOnboardingModal])
+
+  useEffect(() => {
+    if (!loading && !user) {
+      sessionStorage.removeItem('artport_onboarding_modal_dismissed_uid')
+      setDismissedModalUid(null)
+    }
+  }, [user, loading])
+
+  const handleOnboardingClose = () => {
+    const uid = user?.uid ?? ''
+    if (uid) {
+      sessionStorage.setItem('artport_onboarding_modal_dismissed_uid', uid)
+      setDismissedModalUid(uid)
+    }
+    setShowOnboarding(false)
+  }
+
   return (
-    <OnboardingOverlay skip={isLoginPage}>
-    <Routes>
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/login/email" element={<EmailLoginPage />} />
-      <Route path="/" element={<PrivateRoute><FeedPage /></PrivateRoute>} />
-      <Route path="/exhibitions" element={<PrivateRoute><ExhibitionsPage /></PrivateRoute>} />
-      <Route path="/exhibitions/create" element={<AuthRequiredRoute><ExhibitionCreatePage /></AuthRequiredRoute>} />
-      <Route path="/exhibitions/:id" element={<PrivateRoute><ExhibitionDetailPage /></PrivateRoute>} />
-      <Route path="/post" element={<AuthRequiredRoute><PostPage /></AuthRequiredRoute>} />
-      <Route path="/portfolio" element={<PrivateRoute><PortfolioPage /></PrivateRoute>} />
-      <Route path="/artists/:id" element={<PrivateRoute><ArtistPage /></PrivateRoute>} />
-      <Route path="/artworks/:id" element={<PrivateRoute><ArtworkDetailPage /></PrivateRoute>} />
-      <Route path="/mypage" element={<PrivateRoute><MyPage /></PrivateRoute>} />
-      <Route path="/camera" element={<PrivateRoute><CameraPage /></PrivateRoute>} />
-      <Route path="/portfolio/:id" element={<PrivateRoute><ViewingRecordDetailPage /></PrivateRoute>} />
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
-    </OnboardingOverlay>
+    <>
+      {showOnboarding && <OnboardingModal onClose={handleOnboardingClose} />}
+      <OnboardingOverlay skip={isLoginPage}>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/login/email" element={<EmailLoginPage />} />
+        <Route path="/" element={<PrivateRoute><FeedPage /></PrivateRoute>} />
+        <Route path="/exhibitions" element={<PrivateRoute><ExhibitionsPage /></PrivateRoute>} />
+        <Route path="/exhibitions/create" element={<AuthRequiredRoute><ExhibitionCreatePage /></AuthRequiredRoute>} />
+        <Route path="/exhibitions/:id" element={<PrivateRoute><ExhibitionDetailPage /></PrivateRoute>} />
+        <Route path="/post" element={<AuthRequiredRoute><PostPage /></AuthRequiredRoute>} />
+        <Route path="/portfolio" element={<PrivateRoute><PortfolioPage /></PrivateRoute>} />
+        <Route path="/artists/:id" element={<PrivateRoute><ArtistPage /></PrivateRoute>} />
+        <Route path="/artworks/:id" element={<PrivateRoute><ArtworkDetailPage /></PrivateRoute>} />
+        <Route path="/mypage" element={<PrivateRoute><MyPage /></PrivateRoute>} />
+        <Route path="/camera" element={<PrivateRoute><CameraPage /></PrivateRoute>} />
+        <Route path="/portfolio/:id" element={<PrivateRoute><ViewingRecordDetailPage /></PrivateRoute>} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+      </OnboardingOverlay>
+    </>
   )
 }
 
