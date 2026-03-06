@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { analyzeImageBase64, generateQuestionsBase64 } from '../lib/gemini'
+import { analyzeImageBase64, generateQuestionsBase64, generateSummaryFromAnswers } from '../lib/gemini'
 
 const GUIDE_STEPS = ['作品ジャンルを検出', '構図・技法を分析', '鑑賞ガイドを生成中...', '展覧会情報を照合']
 const QUESTION_STEPS = ['作品ジャンルを検出', '構図・技法を分析', '気づきの質問を生成中...']
+const SUMMARY_STEPS = ['回答を整理中', 'あなたの感性を分析中', 'まとめを生成中...']
 
 export default function CameraPage() {
   const navigate = useNavigate()
@@ -25,6 +26,7 @@ export default function CameraPage() {
   const [currentStep, setCurrentStep] = useState(0)
   const [steps, setSteps] = useState(GUIDE_STEPS)
   const [error, setError] = useState(null)
+  const [summaryMessage, setSummaryMessage] = useState(null) // まとめメッセージ
   const questionRefs = useRef([null, null, null]) // 各質問へのscroll用ref
 
   useEffect(() => {
@@ -147,7 +149,7 @@ export default function CameraPage() {
     setShowExplanation(true)
   }
 
-  function handleAdvance() {
+  async function handleAdvance() {
     if (revealedUpTo < 2) {
       const nextIdx = revealedUpTo + 1
       setRevealedUpTo(nextIdx)
@@ -159,6 +161,28 @@ export default function CameraPage() {
         questionRefs.current[nextIdx]?.scrollIntoView({ behavior: 'smooth', block: 'start' })
       }, 80)
     } else {
+      // 最後の質問：まとめを生成してからsummaryへ
+      const qas = questionData.questions.map((q, i) => ({
+        question: q.text,
+        answer: answers[i]?.choice
+          ? (answers[i].freeText ? `${answers[i].choice}（${answers[i].freeText}）` : answers[i].choice)
+          : (answers[i]?.freeText || '回答なし')
+      }))
+      setSteps(SUMMARY_STEPS)
+      setCurrentStep(0)
+      setState('analyzing-summary')
+      // ステップアニメーション
+      for (let i = 0; i < SUMMARY_STEPS.length - 1; i++) {
+        await new Promise(r => setTimeout(r, 800))
+        setCurrentStep(i + 1)
+      }
+      try {
+        const msg = await generateSummaryFromAnswers(capturedBase64, qas, questionData.genre)
+        setSummaryMessage(msg || null)
+      } catch (e) {
+        console.error('[CameraPage] まとめ生成エラー:', e)
+        setSummaryMessage(null)
+      }
       setState('summary')
     }
   }
@@ -176,6 +200,7 @@ export default function CameraPage() {
     setShowExplanation(false)
     setCurrentStep(0)
     setError(null)
+    setSummaryMessage(null)
     startCamera()
   }
 
@@ -278,7 +303,7 @@ export default function CameraPage() {
       )}
 
       {/* ── STATE: ANALYZING / ANALYZING-QUESTIONS / ANALYZING-SUMMARY ── */}
-      {(state === 'analyzing' || state === 'analyzing-questions') && (
+      {(state === 'analyzing' || state === 'analyzing-questions' || state === 'analyzing-summary') && (
         <div className="min-h-screen bg-ink flex flex-col items-center justify-center p-10">
           <div className="w-40 h-[210px] rounded-md mb-8 relative overflow-hidden bg-warm shadow-[0_12px_40px_rgba(0,0,0,0.5)]">
             <div style={s.pulseRing1} />
@@ -378,9 +403,17 @@ export default function CameraPage() {
           <div className="flex-1 overflow-y-auto p-5 pb-[80px]">
             {/* 鑑賞ガイド */}
             {questionData.guide && (
-              <div className="guide-card mb-5">
+              <div className="guide-card mb-4">
                 <div className="guide-label">✦ 鑑賞ガイド</div>
                 <div className="guide-text text-[13px] leading-relaxed">{questionData.guide}</div>
+              </div>
+            )}
+
+            {/* 正解なしのノート */}
+            {questionData.note && (
+              <div className="flex items-center gap-2.5 bg-accent/8 border border-accent/25 rounded-xl px-4 py-3 mb-5">
+                <span className="text-accent text-[14px] flex-shrink-0">✦</span>
+                <span className="font-sans text-[12px] text-ink/70 leading-snug">{questionData.note}</span>
               </div>
             )}
 
@@ -480,7 +513,7 @@ export default function CameraPage() {
                           className="btn-primary w-full"
                           onClick={handleAdvance}
                         >
-                          {i === 2 ? '結果を見る' : '次の質問へ →'}
+                          {i === 2 ? '結果を見る' : '次の質問へ ↓'}
                         </button>
                       )}
                     </div>
@@ -513,8 +546,16 @@ export default function CameraPage() {
           </div>
 
           <div className="p-5 pb-[80px]">
-            <div className="font-mono text-[10px] tracking-[0.12em] text-accent uppercase mb-1">❖ 展右記録</div>
+            <div className="font-mono text-[10px] tracking-[0.12em] text-accent uppercase mb-1">❖ 鑑賞記録</div>
             <div className="font-serif text-[22px] text-ink font-light mb-5">鑑賞の足跡</div>
+
+            {/* まとめメッセージ */}
+            {summaryMessage && (
+              <div className="guide-card mb-6">
+                <div className="guide-label">✦ あなたの鑑賞まとめ</div>
+                <div className="guide-text text-[13px] leading-relaxed whitespace-pre-line">{summaryMessage}</div>
+              </div>
+            )}
 
             {questionData.questions.map((q, i) => {
               const ans = answers[i]
