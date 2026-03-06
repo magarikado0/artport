@@ -553,7 +553,14 @@ export default function CameraPage() {
             {summaryMessage?.message && (
               <div className="guide-card mb-5">
                 <div className="guide-label">✦ あなたの鑑賞まとめ</div>
-                <div className="guide-text whitespace-pre-line">{summaryMessage.message}</div>
+                {summaryMessage.keyword && (
+                  <div className="font-serif text-[22px] text-paper font-light leading-snug mb-3">{summaryMessage.keyword}</div>
+                )}
+                <div className="flex flex-col gap-2.5 mt-1">
+                  {summaryMessage.message.split('\n').filter(l => l.trim()).map((line, i) => (
+                    <div key={i} className="font-sans text-[15px] leading-relaxed text-paper/90 font-light">{line}</div>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -577,35 +584,7 @@ export default function CameraPage() {
               </div>
             )}
 
-            {questionData.questions.map((q, i) => {
-              const ans = answers[i]
-              return (
-                <div key={q.num} className="mb-5 rounded-2xl border border-border overflow-hidden">
-                  {/* 質問 */}
-                  <div className="bg-warm px-4 pt-3 pb-2">
-                    <span className="font-mono text-[10px] text-accent mr-1.5">{q.num}</span>
-                    <span className="font-sans text-[13px] text-ink">{q.text}</span>
-                  </div>
-                  {/* 回答 */}
-                  <div className="bg-paper px-4 py-2 border-t border-border">
-                    {ans?.choice && (
-                      <div className="font-sans text-[13px] text-ink mb-1">› {ans.choice}</div>
-                    )}
-                    {ans?.freeText && (
-                      <div className="font-sans text-[12px] text-muted italic">{ans.freeText}</div>
-                    )}
-                    {!ans?.choice && !ans?.freeText && (
-                      <div className="font-sans text-[12px] text-muted">（回答なし）</div>
-                    )}
-                  </div>
-                  {/* 解説 */}
-                  <div className="bg-ink/95 px-4 py-2.5 border-t border-accent/20">
-                    <span className="font-mono text-[9px] text-accent mr-1.5">❖</span>
-                    <span className="font-sans text-[12px] text-paper/80">{q.explanation}</span>
-                  </div>
-                </div>
-              )
-            })}
+
 
             {/* アクション */}
             <div className="flex gap-2.5 mt-4">
