@@ -20,7 +20,7 @@ export default function ArtworkDetailPage() {
         setArtwork(data)
 
         // キャッシュ済みガイドがあればそのまま使う
-        if (data?.guide) {
+        if (data?.guide && import.meta.env.VITE_ENABLE_GUIDE_CACHE === 'true') {
           setGuide(data.guide)
         }
       } catch (e) {

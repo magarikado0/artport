@@ -33,13 +33,22 @@
     @apply w-full py-3.5 border border-border rounded-2xl text-[11px] font-mono text-muted cursor-pointer bg-transparent tracking-wider;
   }
   .guide-card {
-    @apply bg-ink text-paper rounded-2xl p-[18px] mb-3.5 relative overflow-hidden;
+    @apply bg-ink/85 text-paper rounded-2xl p-[18px] mb-3.5 relative overflow-hidden;
   }
   .guide-label {
     @apply font-mono text-[9px] tracking-[0.12em] text-accent uppercase mb-2.5 flex items-center gap-1.5;
   }
   .guide-text {
     @apply text-[13px] leading-[1.85] text-paper/90 font-light;
+  }
+  .guide-points {
+    @apply flex flex-col gap-2.5 mt-3.5;
+  }
+  .guide-point {
+    @apply flex gap-3 bg-paper/5 border border-paper/10 rounded-xl px-3.5 py-3 text-[13px] leading-[1.85] text-paper/90 font-light;
+  }
+  .guide-point-num {
+    @apply font-mono text-[10px] text-accent flex-shrink-0 mt-[3px] tracking-wider;
   }
   .bottom-nav {
     @apply sticky bottom-0 bg-paper border-t border-border flex pb-5 pt-2;

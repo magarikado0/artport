@@ -34,7 +34,8 @@ async function generateWithQwen(base64, prompt) {
       'Authorization': `Bearer ${import.meta.env.VITE_QWEN_API_KEY}`
     },
     body: JSON.stringify({
-      model: 'qwen3-vl-flash',
+      // model: 'qwen3-vl-flash',
+      model: 'qwen3.5-flash',
       messages: [{
         role: 'user',
         content: [
@@ -67,7 +68,7 @@ function buildGuidePrompt(genre, title) {
 ## 条件
 - 専門用語なし、中学生でも分かる言葉
 - どこを見れば良いかを具体的に
-- 3つのポイント、各50〜80字
+- 3つのポイント、各50〜60字
 - 最初に作品の核心を一文で
 
 ## 出力（JSONのみ）
@@ -82,9 +83,9 @@ const CAMERA_PROMPT = `この作品画像を見て以下を返してください
 ## 出力形式
 ジャンル: （ジャンル名）
 核心: （一文でこの作品の核心）
-01: （ポイント1・50〜80字）
-02: （ポイント2・50〜80字）
-03: （ポイント3・50〜80字）`
+01: （ポイント1・50〜60字）
+02: （ポイント2・50〜60字）
+03: （ポイント3・50〜60字）`
 
 // ── エクスポート関数 ──────────────────────────────
 
@@ -148,20 +149,27 @@ function buildSummaryPrompt(qas, genre) {
 
 ${pairs}
 
-この回答をもとに、鑑賞者への「まとめのメッセージ」を生成してください。
+以下の2つを生成してください。
 
-## 条件
-- 鑑賞者が感じ取ったことを肯定的に言語化して伝える（例：「あなたは~と感じました」）
+## 1. まとめメッセージ
+- 鑑賞者が感じ取ったことを肇定的に言語化して伝える（例：「あなたは～と感じたのですんですね」）
 - 専門用語なし、温かみのある文体
 - 箇条書きで、全体の字数は100字程度
 
-## 出力（テキストのみ、JSONなし）`
+## 2. AI鑑賞ガイド
+- 作品を初めて見る人が自然に興味を持てる鑑賞ガイド
+- 専門用語なし、中学生でも分かる言葉
+- 作品の核心を一文（30字以内）、鑑賞ポイント3つ（各40〜60字）
+
+## 出力（JSONのみ）
+{"message":"まとめメッセージ","guide":{"core":"核心一文（30字以内）","points":[{"num":"01","text":"ポイント1"},{"num":"02","text":"ポイント2"},{"num":"03","text":"ポイント3"}]}}`
 } 
 
 // カメラページ用：Q&Aからまとめを生成する
 export async function generateSummaryFromAnswers(base64, qas, genre) {
   try {
-    return await generate(base64, buildSummaryPrompt(qas, genre))
+    const text = await generate(base64, buildSummaryPrompt(qas, genre))
+    return JSON.parse(text.replace(/```json|```/g, '').trim())
   } catch (error) {
     console.error('[AI] generateSummaryFromAnswers エラー:', error)
     return null

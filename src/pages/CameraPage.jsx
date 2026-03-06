@@ -313,7 +313,7 @@ export default function CameraPage() {
               <img src={capturedImage} alt="captured" className="w-full h-full object-cover rounded-md" />
             )}
           </div>
-          <div className="font-mono text-[10px] tracking-[0.14em] text-accent uppercase mb-3">✦ Gemini が解析中</div>
+          <div className="font-mono text-[10px] tracking-[0.14em] text-accent uppercase mb-3">✦ 解析中</div>
           <div className="font-serif text-[22px] text-paper font-light mb-1.5">作品を読み解いています</div>
           <div className="text-[12px] text-paper/40 font-mono mb-7">しばらくお待ちください</div>
           <div className="w-[200px] h-0.5 bg-white/10 rounded-sm overflow-hidden mb-5">
@@ -550,10 +550,30 @@ export default function CameraPage() {
             <div className="font-serif text-[22px] text-ink font-light mb-5">鑑賞の足跡</div>
 
             {/* まとめメッセージ */}
-            {summaryMessage && (
-              <div className="guide-card mb-6">
+            {summaryMessage?.message && (
+              <div className="guide-card mb-5">
                 <div className="guide-label">✦ あなたの鑑賞まとめ</div>
-                <div className="guide-text text-[13px] leading-relaxed whitespace-pre-line">{summaryMessage}</div>
+                <div className="guide-text whitespace-pre-line">{summaryMessage.message}</div>
+              </div>
+            )}
+
+            {/* AI鑑賞ガイド */}
+            {summaryMessage?.guide && (
+              <div className="guide-card mb-6">
+                <div className="guide-label">❖ AI 鑑賞ガイド</div>
+                {summaryMessage.guide.core && (
+                  <div className="guide-text">{summaryMessage.guide.core}</div>
+                )}
+                {summaryMessage.guide.points?.length > 0 && (
+                  <div className="guide-points">
+                    {summaryMessage.guide.points.map(p => (
+                      <div className="guide-point" key={p.num}>
+                        <span className="guide-point-num">{p.num}</span>
+                        <span>{p.text}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
