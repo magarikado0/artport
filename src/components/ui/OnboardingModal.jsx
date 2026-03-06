@@ -103,12 +103,12 @@ export default function OnboardingModal({ onClose }) {
           </div>
         ) : (
           <div className="flex gap-3">
-            <button
+            {/* <button
               className="flex-1 py-3.5 border border-border text-muted rounded-2xl font-mono text-[11px] tracking-wider active:scale-[0.98] transition-transform"
               onClick={() => handleClose(false)}
             >
               スキップ
-            </button>
+            </button> */}
             <button
               className="flex-1 py-3.5 bg-ink text-paper rounded-2xl font-mono text-[11px] tracking-wider active:scale-[0.98] transition-transform"
               onClick={next}
