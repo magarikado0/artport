@@ -300,8 +300,8 @@ export default function CameraPage() {
       {state === 'mode-select' && capturedImage && (
         <div className="min-h-screen bg-ink flex flex-col">
           {/* 撮影画像 */}
-          <div className="w-full h-[300px] relative overflow-hidden">
-            <img src={capturedImage} alt="captured" className="w-full h-full object-cover" />
+          <div className="w-full h-[300px] relative overflow-hidden bg-warm">
+            <img src={capturedImage} alt="captured" className="w-full h-full object-contain" />
             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-ink" />
             <button className="absolute top-[52px] left-4 w-9 h-9 bg-black/40 border border-white/20 rounded-full text-white backdrop-blur-sm"
               onClick={handleRetake}>←</button>
@@ -354,7 +354,7 @@ export default function CameraPage() {
             <div style={s.pulseRing2} />
             <div style={s.pulseRing3} />
             {capturedImage && (
-              <img src={capturedImage} alt="captured" className="w-full h-full object-cover rounded-md" />
+              <img src={capturedImage} alt="captured" className="w-full h-full object-contain rounded-md" />
             )}
           </div>
           <div className="font-mono text-[10px] tracking-[0.14em] text-accent uppercase mb-3">✦ 解析中</div>
@@ -367,13 +367,20 @@ export default function CameraPage() {
             {steps.map((step, i) => (
               <div key={step} className="flex items-center gap-2">
                 <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${i <= currentStep ? 'bg-accent' : 'bg-white/20'}`}
-                  style={{ animation: i === currentStep && i < steps.length - 1 ? 'dotPulse 1s ease-in-out infinite' : 'none' }} />
+                  style={{ animation: i === currentStep ? 'dotPulse 1s ease-in-out infinite' : 'none' }} />
                 <span className={`font-mono text-[10px] tracking-wider ${i <= currentStep ? 'text-paper/90' : 'text-paper/30'}`}>
                   {step}
                 </span>
               </div>
             ))}
           </div>
+          {/* 最後のステップ到達後もAPIが処理中であることを示すスピナー */}
+          {currentStep >= steps.length - 1 && (
+            <div className="mt-6 flex flex-col items-center gap-2">
+              <div className="w-7 h-7 rounded-full border-2 border-white/15 border-t-accent animate-spin" />
+              <span className="font-mono text-[9px] tracking-wider text-paper/30">解析中...</span>
+            </div>
+          )}
         </div>
       )}
 
@@ -383,7 +390,7 @@ export default function CameraPage() {
           {/* Captured image */}
           <div className="w-full h-[280px] relative overflow-hidden bg-warm">
             {capturedImage && (
-              <img src={capturedImage} alt="artwork" className="w-full h-full object-cover" />
+              <img src={capturedImage} alt="artwork" className="w-full h-full object-contain" />
             )}
             <button className="absolute top-4 left-4 w-9 h-9 bg-paper/85 rounded-full backdrop-blur-sm" onClick={() => navigate(-1)}>←</button>
             <button className="absolute top-4 right-4 bg-paper/85 backdrop-blur-sm rounded-full px-3.5 py-2 font-mono text-[9px] tracking-wider uppercase" onClick={handleRetake}>
@@ -447,7 +454,7 @@ export default function CameraPage() {
           {/* 撮影画像 + ヘッダー（固定） */}
           <div className="w-full h-[220px] relative overflow-hidden bg-warm flex-shrink-0">
             {capturedImage && (
-              <img src={capturedImage} alt="artwork" className="w-full h-full object-cover" />
+              <img src={capturedImage} alt="artwork" className="w-full h-full object-contain" />
             )}
             <button className="absolute top-4 left-4 w-9 h-9 bg-paper/85 rounded-full backdrop-blur-sm"
               onClick={() => setState('mode-select')}>←</button>
@@ -590,7 +597,7 @@ export default function CameraPage() {
           {/* 撮影画像 */}
           <div className="w-full h-[280px] relative overflow-hidden bg-warm">
             {capturedImage && (
-              <img src={capturedImage} alt="artwork" className="w-full h-full object-cover" />
+              <img src={capturedImage} alt="artwork" className="w-full h-full object-contain" />
             )}
             <button className="absolute top-4 left-4 w-9 h-9 bg-paper/85 rounded-full backdrop-blur-sm" onClick={() => navigate(-1)}>←</button>
             <button className="absolute top-4 right-4 bg-paper/85 backdrop-blur-sm rounded-full px-3.5 py-2 font-mono text-[9px] tracking-wider uppercase" onClick={handleRetake}>
