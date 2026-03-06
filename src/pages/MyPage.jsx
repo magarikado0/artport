@@ -3,14 +3,42 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import BottomNav from '../components/layout/BottomNav'
 
-const DEMO_HISTORY = [
-  { title: '静寂の筆跡', artist: '山田 碧', genre: '書道', date: '今日', bg: 'linear-gradient(135deg,#e8e0d0,#d4c8b4)', symbol: '書' },
-  { title: '霧の朝', artist: '田中 光', genre: '写真', date: '昨日', bg: 'linear-gradient(135deg,#d4dce8,#c0ccd8)', symbol: '📷' },
-]
+const GENRES = ['書道', '写真', '陶芸', '絵画', '彫刻', 'その他']
 
 export default function MyPage() {
-  const { user, userProfile, logout } = useAuth()
+  const { user, userProfile, logout, updateUserProfile } = useAuth()
   const navigate = useNavigate()
+  const [editOpen, setEditOpen] = useState(false)
+  const [editName, setEditName] = useState('')
+  const [editBio, setEditBio] = useState('')
+  const [editRole, setEditRole] = useState('viewer')
+  const [editGenre, setEditGenre] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  const openEdit = () => {
+    setEditName(userProfile?.name || '')
+    setEditBio(userProfile?.bio || '')
+    setEditRole(userProfile?.role || 'viewer')
+    setEditGenre(userProfile?.genre || '')
+    setEditOpen(true)
+  }
+
+  const handleSave = async () => {
+    setSaving(true)
+    try {
+      await updateUserProfile({
+        name: editName.trim(),
+        bio: editBio.trim(),
+        role: editRole,
+        genre: editGenre,
+      })
+      setEditOpen(false)
+    } catch (e) {
+      console.error('[MyPage] プロフィール更新エラー:', e)
+    } finally {
+      setSaving(false)
+    }
+  }
 
   const handleLogout = async () => {
     if (confirm('ログアウトしますか？')) {
@@ -49,7 +77,7 @@ export default function MyPage() {
         <div className="grid grid-cols-2 gap-2.5">
           {/* 作品を投稿 */}
           <button onClick={() => navigate('/post')}
-            className="flex flex-col items-center justify-center gap-2 bg-warm rounded-2xl py-5 border border-border active:scale-95 transition-transform">
+            className="flex flex-col items-center justify-center gap-2 bg-warm rounded-2xl py-8 border border-border active:scale-95 transition-transform">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-ink">
               <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
               <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
@@ -58,7 +86,7 @@ export default function MyPage() {
           </button>
           {/* 展覧会を作成 */}
           <button onClick={() => navigate('/exhibitions/create')}
-            className="flex flex-col items-center justify-center gap-2 bg-warm rounded-2xl py-5 border border-border active:scale-95 transition-transform">
+            className="flex flex-col items-center justify-center gap-2 bg-warm rounded-2xl py-8 border border-border active:scale-95 transition-transform">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-ink">
               <path d="M3 9l9-6 9 6v11a1 1 0 01-1 1H4a1 1 0 01-1-1V9z" />
               <rect x="9" y="14" width="6" height="7" />
@@ -67,7 +95,7 @@ export default function MyPage() {
           </button>
           {/* 鑑賞記録 */}
           <button onClick={() => navigate('/portfolio')}
-            className="flex flex-col items-center justify-center gap-2 bg-warm rounded-2xl py-5 border border-border active:scale-95 transition-transform">
+            className="flex flex-col items-center justify-center gap-2 bg-warm rounded-2xl py-8 border border-border active:scale-95 transition-transform">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-ink">
               <path d="M12 21C7 16 3 12.4 3 8.5A5.5 5.5 0 0112 4.09 5.5 5.5 0 0121 8.5c0 3.9-4 7.5-9 12.5z" />
             </svg>
@@ -76,7 +104,7 @@ export default function MyPage() {
           {/* ログアウト or サインアップ */}
           {user?.isAnonymous ? (
             <button onClick={() => navigate('/login')}
-              className="flex flex-col items-center justify-center gap-2 bg-accent rounded-2xl py-5 active:scale-95 transition-transform">
+              className="flex flex-col items-center justify-center gap-2 bg-accent rounded-2xl py-8 active:scale-95 transition-transform">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
                 <circle cx="12" cy="7" r="4" />
@@ -87,7 +115,7 @@ export default function MyPage() {
             </button>
           ) : (
             <button onClick={handleLogout}
-              className="flex flex-col items-center justify-center gap-2 bg-warm rounded-2xl py-5 border border-border active:scale-95 transition-transform">
+              className="flex flex-col items-center justify-center gap-2 bg-warm rounded-2xl py-8 border border-border active:scale-95 transition-transform">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-muted">
                 <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
                 <polyline points="16 17 21 12 16 7" />
@@ -100,7 +128,7 @@ export default function MyPage() {
       </div>
 
       {/* Recent activity */}
-      <div className="px-5 pt-5">
+      {/* <div className="px-5 pt-5">
         <p className="section-title">✦ 最近の活動</p>
         <div className="space-y-0">
           {DEMO_HISTORY.map((h,i) => (
@@ -115,7 +143,62 @@ export default function MyPage() {
             </div>
           ))}
         </div>
-      </div>
+      </div> */}
+
+      {/* プロフィール編集 */}
+      {!user?.isAnonymous && (
+        <div className="px-5 pt-5 pb-6">
+          <button
+            className="w-full flex items-center justify-between py-3.5 px-4 bg-warm rounded-2xl border border-border active:scale-[0.98] transition-transform"
+            onClick={editOpen ? () => setEditOpen(false) : openEdit}
+          >
+            <span className="font-mono text-[11px] tracking-wide text-ink">✎ プロフィールを編集</span>
+            <span className="font-mono text-[11px] text-muted">{editOpen ? '▲' : '▼'}</span>
+          </button>
+
+          {editOpen && (
+            <div className="mt-3 flex flex-col gap-3">
+              <div>
+                <label className="form-label">名前</label>
+                <input className="form-input" value={editName} onChange={e => setEditName(e.target.value)} placeholder="表示名" />
+              </div>
+              <div>
+                <label className="form-label">自己紹介</label>
+                <textarea
+                  className="form-input resize-none"
+                  rows={3}
+                  value={editBio}
+                  onChange={e => setEditBio(e.target.value)}
+                  placeholder="あなたについて一言"
+                />
+              </div>
+              <div>
+                <label className="form-label">役割</label>
+                <select className="form-select" value={editRole} onChange={e => setEditRole(e.target.value)}>
+                  <option value="viewer">鑑賞者</option>
+                  <option value="artist">アーティスト</option>
+                </select>
+              </div>
+              {editRole === 'artist' && (
+                <div>
+                  <label className="form-label">ジャンル</label>
+                  <select className="form-select" value={editGenre} onChange={e => setEditGenre(e.target.value)}>
+                    <option value="">選択してください</option>
+                    {GENRES.map(g => <option key={g} value={g}>{g}</option>)}
+                  </select>
+                </div>
+              )}
+              <button
+                className="btn-primary"
+                onClick={handleSave}
+                disabled={saving || !editName.trim()}
+              >
+                {saving ? '保存中...' : '保存する'}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       </div>
 

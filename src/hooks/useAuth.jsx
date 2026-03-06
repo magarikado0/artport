@@ -7,7 +7,7 @@ import {
   signOut,
   onAuthStateChanged,
 } from 'firebase/auth'
-import { doc, getDoc, setDoc } from 'firebase/firestore'
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore'
 import { auth, db, googleProvider } from '../lib/firebase'
 
 const AuthContext = createContext(null)
@@ -76,8 +76,14 @@ export function AuthProvider({ children }) {
 
   const logout = () => signOut(auth)
 
+  const updateUserProfile = async (fields) => {
+    if (!user) return
+    await updateDoc(doc(db, 'users', user.uid), fields)
+    setUserProfile(prev => ({ ...prev, ...fields }))
+  }
+
   return (
-    <AuthContext.Provider value={{ user, userProfile, loading, loginWithGoogle, loginWithEmail, signupWithEmail, loginAnonymously, logout }}>
+    <AuthContext.Provider value={{ user, userProfile, loading, loginWithGoogle, loginWithEmail, signupWithEmail, loginAnonymously, logout, updateUserProfile }}>
       {children}
     </AuthContext.Provider>
   )

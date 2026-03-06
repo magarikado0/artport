@@ -163,3 +163,51 @@ export async function createExhibition(data, coverFile) {
   })
   return docRef.id
 }
+
+// ── Viewing Records ───────────────────────
+// base64文字列をCloudinaryへアップロードしてURLを返す
+async function uploadBase64ToCloudinary(base64) {
+  const formData = new FormData()
+  formData.append('file', `data:image/jpeg;base64,${base64}`)
+  formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET)
+  const response = await axios.post(CLOUDINARY_UPLOAD_URL, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+  return response.data.secure_url
+}
+
+// カメラ鑑賞記録を保存する
+// type: 'guide' | 'questions'
+// payload: ガイドモード → { genre, guide }  質問モード → { genre, summary, questions, answers }
+export async function saveViewingRecord(uid, type, payload, base64) {
+  let imageUrl = ''
+  try {
+    imageUrl = await uploadBase64ToCloudinary(base64)
+  } catch (e) {
+    console.warn('[firestore] 画像アップロード失敗（スキップ）:', e)
+  }
+  const docRef = await addDoc(collection(db, 'users', uid, 'viewingRecords'), {
+    type,
+    imageUrl,
+    ...payload,
+    createdAt: serverTimestamp(),
+  })
+  return docRef.id
+}
+
+// 鑑賞記録1件を取得する
+export async function fetchViewingRecord(uid, recordId) {
+  const snap = await getDoc(doc(db, 'users', uid, 'viewingRecords', recordId))
+  if (!snap.exists()) return null
+  return { id: snap.id, ...snap.data() }
+}
+
+// 鑑賞記録一覧を取得する
+export async function fetchViewingRecords(uid) {
+  const q = query(
+    collection(db, 'users', uid, 'viewingRecords'),
+    orderBy('createdAt', 'desc')
+  )
+  const snap = await getDocs(q)
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }))
+}
