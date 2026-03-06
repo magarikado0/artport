@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import BottomNav from '../components/layout/BottomNav'
 import { fetchExhibitions } from '../lib/firestore'
+import { logEvent } from '../lib/analytics'
 
 const FILTERS = ['開催中', '近日開催', '書道', '写真', '陶芸']
 const DEMO = [
@@ -16,6 +17,7 @@ export default function ExhibitionsPage() {
   const [exhibitions, setExhibitions] = useState([])
 
   useEffect(() => {
+    logEvent('screen_view', { screen_name: 'exhibitions' })
     fetchExhibitions().then(setExhibitions).catch(console.error)
   }, [])
 

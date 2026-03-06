@@ -4,6 +4,7 @@ import { doc, getDoc, updateDoc } from 'firebase/firestore'
 import { db } from '../lib/firebase'
 import { generateViewingGuide } from '../lib/gemini'
 import { fetchArtworkById } from '../lib/firestore'
+import { logEvent } from '../lib/analytics'
 
 export default function ArtworkDetailPage() {
   const { id } = useParams()
@@ -18,6 +19,7 @@ export default function ArtworkDetailPage() {
       try {
         const data = await fetchArtworkById(id)
         setArtwork(data)
+        logEvent('artwork_viewed', { artwork_id: id, genre: data?.genre || 'unknown' })
 
         // キャッシュ済みガイドがあればそのまま使う
         if (data?.guide && import.meta.env.VITE_ENABLE_GUIDE_CACHE === 'true') {
@@ -37,6 +39,7 @@ export default function ArtworkDetailPage() {
       const result = await generateViewingGuide(artwork.imageUrl, artwork.genre, artwork.title)
       if (result) {
         setGuide(result)
+        logEvent('guide_generated', { artwork_id: id, genre: artwork.genre, source: 'artwork_detail' })
         // Firestoreにキャッシュ保存
         await updateDoc(doc(db, 'artworks', id), { guide: result })
       } else {

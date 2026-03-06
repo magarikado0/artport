@@ -4,6 +4,7 @@ import { analyzeImageBase64, generateQuestionsBase64, generateSummaryFromAnswers
 import { saveViewingRecord } from '../lib/firestore'
 import { useAuth } from '../hooks/useAuth'
 import BottomNav from '../components/layout/BottomNav'
+import { logEvent } from '../lib/analytics'
 
 const GUIDE_STEPS = ['作品ジャンルを検出', '構図・技法を分析', '鑑賞ガイドを生成中...', '展覧会情報を照合']
 const QUESTION_STEPS = ['作品ジャンルを検出', '構図・技法を分析', '気づきの質問を生成中...']
@@ -47,6 +48,7 @@ export default function CameraPage() {
       })
       streamRef.current = stream
       if (videoRef.current) videoRef.current.srcObject = stream
+      logEvent('camera_open')
     } catch (e) {
       setError('カメラへのアクセスが許可されていません')
     }
@@ -80,6 +82,7 @@ export default function CameraPage() {
     setCapturedImage(dataUrl)
     setCapturedBase64(base64)
     stopCamera()
+    logEvent('photo_taken')
     // 撮影後はモード選択画面へ
     setState('mode-select')
   }
@@ -89,6 +92,7 @@ export default function CameraPage() {
     setSteps(GUIDE_STEPS)
     setCurrentStep(0)
     setState('analyzing')
+    logEvent('guide_mode_selected')
 
     // ステップアニメーション
     for (let i = 0; i < GUIDE_STEPS.length - 1; i++) {
@@ -111,6 +115,7 @@ export default function CameraPage() {
       }
 
       setGuide(parsed)
+      logEvent('guide_generated', { genre: parsed.genre, source: 'camera' })
       setState('result')
     } catch (e) {
       setError('解析に失敗しました。もう一度お試しください。')
@@ -123,6 +128,7 @@ export default function CameraPage() {
     setSteps(QUESTION_STEPS)
     setCurrentStep(0)
     setState('analyzing-questions')
+    logEvent('questions_mode_selected')
 
     // ステップアニメーション
     for (let i = 0; i < QUESTION_STEPS.length - 1; i++) {
@@ -139,6 +145,7 @@ export default function CameraPage() {
       setSelectedChoice(null)
       setFreeText('')
       setShowExplanation(false)
+      logEvent('questions_generated', { genre: data.genre })
       setState('questions')
     } catch (e) {
       setError('質問の生成に失敗しました。もう一度お試しください。')
@@ -185,6 +192,7 @@ export default function CameraPage() {
       try {
         const msg = await generateSummaryFromAnswers(capturedBase64, qas, questionData.genre)
         setSummaryMessage(msg || null)
+        logEvent('summary_generated', { genre: questionData.genre })
       } catch (e) {
         console.error('[CameraPage] まとめ生成エラー:', e)
         setSummaryMessage(null)
@@ -203,6 +211,7 @@ export default function CameraPage() {
         guide: { core: guide.core, points: guide.points },
       }, capturedBase64)
       setIsSaved(true)
+      logEvent('viewing_record_saved', { type: 'guide', genre: guide.genre || 'unknown' })
     } catch (e) {
       console.error('[CameraPage] ガイド記録保存エラー:', e)
     } finally {
@@ -222,6 +231,7 @@ export default function CameraPage() {
         answers,
       }, capturedBase64)
       setIsSaved(true)
+      logEvent('viewing_record_saved', { type: 'questions', genre: questionData.genre })
     } catch (e) {
       console.error('[CameraPage] サマリー記録保存エラー:', e)
     } finally {

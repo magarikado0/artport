@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import BottomNav from '../components/layout/BottomNav'
 import { fetchArtworks } from '../lib/firestore'
+import { logEvent } from '../lib/analytics'
 
 const GENRES = ['すべて', '書道', '写真', '陶芸', '絵画', '彫刻']
 const DEMO = [
@@ -26,6 +27,10 @@ export default function FeedPage() {
   const [activeGenre, setActiveGenre] = useState('すべて')
   const [artworks, setArtworks] = useState([])
   const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    logEvent('screen_view', { screen_name: 'feed' })
+  }, [])
 
   useEffect(() => { load() }, [activeGenre])
 
