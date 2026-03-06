@@ -1,6 +1,9 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { analyzeImageBase64, generateQuestionsBase64, generateSummaryFromAnswers } from '../lib/gemini'
+import { saveViewingRecord } from '../lib/firestore'
+import { useAuth } from '../hooks/useAuth'
+import BottomNav from '../components/layout/BottomNav'
 
 const GUIDE_STEPS = ['作品ジャンルを検出', '構図・技法を分析', '鑑賞ガイドを生成中...', '展覧会情報を照合']
 const QUESTION_STEPS = ['作品ジャンルを検出', '構図・技法を分析', '気づきの質問を生成中...']
@@ -8,6 +11,7 @@ const SUMMARY_STEPS = ['回答を整理中', 'あなたの感性を分析中', '
 
 export default function CameraPage() {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const videoRef = useRef(null)
   const canvasRef = useRef(null)
   const streamRef = useRef(null)
@@ -27,6 +31,8 @@ export default function CameraPage() {
   const [steps, setSteps] = useState(GUIDE_STEPS)
   const [error, setError] = useState(null)
   const [summaryMessage, setSummaryMessage] = useState(null) // まとめメッセージ
+  const [isSaving, setIsSaving] = useState(false)   // 保存中フラグ
+  const [isSaved, setIsSaved] = useState(false)     // 保存済フラグ
   const questionRefs = useRef([null, null, null]) // 各質問へのscroll用ref
 
   useEffect(() => {
@@ -187,6 +193,42 @@ export default function CameraPage() {
     }
   }
 
+  // ガイドモードの記録を保存
+  async function handleSaveGuideRecord() {
+    if (!user || isSaving || isSaved) return
+    setIsSaving(true)
+    try {
+      await saveViewingRecord(user.uid, 'guide', {
+        genre: guide.genre,
+        guide: { core: guide.core, points: guide.points },
+      }, capturedBase64)
+      setIsSaved(true)
+    } catch (e) {
+      console.error('[CameraPage] ガイド記録保存エラー:', e)
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  // 質問サマリーの記録を保存
+  async function handleSaveSummaryRecord() {
+    if (!user || isSaving || isSaved) return
+    setIsSaving(true)
+    try {
+      await saveViewingRecord(user.uid, 'questions', {
+        genre: questionData.genre,
+        summary: summaryMessage,
+        questions: questionData.questions,
+        answers,
+      }, capturedBase64)
+      setIsSaved(true)
+    } catch (e) {
+      console.error('[CameraPage] サマリー記録保存エラー:', e)
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   function handleRetake() {
     setState('camera')
     setCapturedImage(null)
@@ -201,6 +243,8 @@ export default function CameraPage() {
     setCurrentStep(0)
     setError(null)
     setSummaryMessage(null)
+    setIsSaving(false)
+    setIsSaved(false)
     startCamera()
   }
 
@@ -278,24 +322,24 @@ export default function CameraPage() {
             )}
 
             <div className="w-full flex flex-col gap-4">
-              {/* AIガイド */}
-              <button
-                className="w-full rounded-2xl bg-accent/10 border border-accent/30 p-5 text-left active:scale-[0.98] transition-transform"
-                onClick={handleSelectGuide}
-              >
-                <div className="font-mono text-[10px] tracking-[0.12em] text-accent uppercase mb-2">❖ AI 鑑賞ガイド</div>
-                <div className="font-serif text-[18px] text-paper font-light mb-1">ガイドを読む</div>
-                <div className="font-mono text-[11px] text-paper/50">AIが作品のポイント3つを解説します</div>
-              </button>
-
               {/* インタラクティブ質問 */}
               <button
-                className="w-full rounded-2xl bg-paper/5 border border-paper/15 p-5 text-left active:scale-[0.98] transition-transform"
+                className="w-full rounded-2xl bg-accent/10 border border-accent/30 p-5 text-left active:scale-[0.98] transition-transform"
                 onClick={handleSelectQuestions}
               >
-                <div className="font-mono text-[10px] tracking-[0.12em] text-paper/50 uppercase mb-2">□ インタラクティブ</div>
-                <div className="font-serif text-[18px] text-paper font-light mb-1">質問に答える</div>
-                <div className="font-mono text-[11px] text-paper/50">3つの質問に答えてまとめをもらう</div>
+                <div className="font-mono text-[10px] tracking-[0.12em] text-accent uppercase mb-2">❖ インタラクティブ</div>
+                <div className="font-serif text-[18px] text-paper font-light mb-1">質問に答える【推奨】</div>
+                <div className="font-mono text-[11px] text-paper/50">3つの質問に答えてまとめと鑑賞ガイドをもらう</div>
+              </button>
+
+              {/* AIガイド */}
+              <button
+                className="w-full rounded-2xl bg-accent/5 border border-accent/30 p-5 text-left active:scale-[0.98] transition-transform"
+                onClick={handleSelectGuide}
+              >
+                <div className="font-mono text-[10px] tracking-[0.12em] text-paper/50 uppercase mb-2">□ AI 鑑賞ガイド</div>
+                <div className="font-serif text-[18px] text-paper font-light mb-1">ガイドを読む</div>
+                <div className="font-mono text-[11px] text-paper/50">AIが作品のポイント3つを解説します</div>
               </button>
             </div>
           </div>
@@ -352,7 +396,7 @@ export default function CameraPage() {
             </div>
           </div>
 
-          <div className="p-5 pb-[60px]">
+          <div className="p-5 pb-[100px]">
             {/* Guide */}
             <div className="guide-card">
               <div className="guide-label">✦ AI 鑑賞ガイド</div>
@@ -370,7 +414,21 @@ export default function CameraPage() {
             </div>
 
             {/* Actions */}
-            <div className="flex gap-2.5 mt-5">
+            {/* 記録ボタン */}
+            {user && (
+              <button
+                className={`w-full py-3.5 rounded-2xl font-mono text-[11px] tracking-wider mt-5 border transition-all ${
+                  isSaved
+                    ? 'bg-accent/15 border-accent/40 text-accent'
+                    : 'bg-warm border-border text-ink active:scale-[0.98]'
+                }`}
+                onClick={handleSaveGuideRecord}
+                disabled={isSaving || isSaved}
+              >
+                {isSaving ? '保存中...' : isSaved ? '✔ 記録しました' : '☆ 鑑賞を記録する'}
+              </button>
+            )}
+            <div className="flex gap-2.5 mt-3">
               <button className="flex-1 py-3 rounded-xl font-mono text-[10px] tracking-wider bg-warm text-ink" onClick={() => navigate('/')}>
                 フィードへ
               </button>
@@ -379,6 +437,7 @@ export default function CameraPage() {
               </button>
             </div>
           </div>
+          <BottomNav />
         </div>
       )}
 
@@ -386,18 +445,18 @@ export default function CameraPage() {
       {state === 'questions' && questionData && (
         <div className="bg-paper min-h-screen flex flex-col">
           {/* 撮影画像 + ヘッダー（固定） */}
-          <div className="w-full h-[160px] relative overflow-hidden bg-warm flex-shrink-0">
+          <div className="w-full h-[220px] relative overflow-hidden bg-warm flex-shrink-0">
             {capturedImage && (
               <img src={capturedImage} alt="artwork" className="w-full h-full object-cover" />
             )}
-            <div className="absolute inset-0 bg-gradient-to-b from-black/30 to-paper/95" />
-            <button className="absolute top-[52px] left-4 w-9 h-9 bg-paper/85 rounded-full backdrop-blur-sm"
+            <button className="absolute top-4 left-4 w-9 h-9 bg-paper/85 rounded-full backdrop-blur-sm"
               onClick={() => setState('mode-select')}>←</button>
             <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-ink/75 backdrop-blur-sm rounded-full px-4 py-1.5 flex items-center gap-1.5 whitespace-nowrap">
               <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
               <span className="font-mono text-[9px] text-white/80">{questionData.genre}</span>
             </div>
           </div>
+
 
           {/* スクロールエリア */}
           <div className="flex-1 overflow-y-auto p-5 pb-[80px]">
@@ -529,13 +588,12 @@ export default function CameraPage() {
       {state === 'summary' && questionData && (
         <div className="bg-paper min-h-screen">
           {/* 撮影画像 */}
-          <div className="w-full h-[220px] relative overflow-hidden bg-warm">
+          <div className="w-full h-[280px] relative overflow-hidden bg-warm">
             {capturedImage && (
               <img src={capturedImage} alt="artwork" className="w-full h-full object-cover" />
             )}
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-paper/90" />
-            <button className="absolute top-[52px] left-4 w-9 h-9 bg-paper/85 rounded-full backdrop-blur-sm" onClick={() => navigate(-1)}>←</button>
-            <button className="absolute top-[52px] right-4 bg-paper/85 backdrop-blur-sm rounded-full px-3.5 py-2 font-mono text-[9px] tracking-wider uppercase" onClick={handleRetake}>
+            <button className="absolute top-4 left-4 w-9 h-9 bg-paper/85 rounded-full backdrop-blur-sm" onClick={() => navigate(-1)}>←</button>
+            <button className="absolute top-4 right-4 bg-paper/85 backdrop-blur-sm rounded-full px-3.5 py-2 font-mono text-[9px] tracking-wider uppercase" onClick={handleRetake}>
               撮り直す
             </button>
             <div className="absolute bottom-3.5 left-1/2 -translate-x-1/2 bg-ink/75 backdrop-blur-sm rounded-full px-4 py-1.5 flex items-center gap-1.5 whitespace-nowrap">
@@ -545,7 +603,7 @@ export default function CameraPage() {
             </div>
           </div>
 
-          <div className="p-5 pb-[80px]">
+          <div className="p-5 pb-[100px]">
             <div className="font-mono text-[10px] tracking-[0.12em] text-accent uppercase mb-1">❖ 鑑賞記録</div>
             <div className="font-serif text-[22px] text-ink font-light mb-5">鑑賞の足跡</div>
 
@@ -586,16 +644,22 @@ export default function CameraPage() {
 
 
 
-            {/* アクション */}
-            <div className="flex gap-2.5 mt-4">
-              <button className="flex-1 py-3 rounded-xl font-mono text-[10px] tracking-wider bg-warm text-ink" onClick={() => navigate('/')}>
-                フィードへ
+            {/* 記録ボタン */}
+            {user && (
+              <button
+                className={`w-full py-3.5 rounded-2xl font-mono text-[11px] tracking-wider mb-3 border transition-all ${
+                  isSaved
+                    ? 'bg-accent/15 border-accent/40 text-accent'
+                    : 'bg-warm border-border text-ink active:scale-[0.98]'
+                }`}
+                onClick={handleSaveSummaryRecord}
+                disabled={isSaving || isSaved}
+              >
+                {isSaving ? '保存中...' : isSaved ? '✔ 記録しました' : '☆ 鑑賞を記録する'}
               </button>
-              <button className="flex-1 py-3 rounded-xl font-mono text-[10px] tracking-wider bg-ink text-paper" onClick={() => navigate('/exhibitions')}>
-                展覧会を見る
-              </button>
-            </div>
+            )}
           </div>
+          <BottomNav />
         </div>
       )}
     </div>

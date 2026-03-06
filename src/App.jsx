@@ -15,6 +15,7 @@ import ArtistPage from './pages/ArtistPage'
 import ArtworkDetailPage from './pages/ArtworkDetailPage'
 import MyPage from './pages/MyPage'
 import CameraPage from './pages/CameraPage'
+import ViewingRecordDetailPage from './pages/ViewingRecordDetailPage'
 
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth()
@@ -85,6 +86,7 @@ function AppRoutes() {
       <Route path="/artworks/:id" element={<PrivateRoute><ArtworkDetailPage /></PrivateRoute>} />
       <Route path="/mypage" element={<PrivateRoute><MyPage /></PrivateRoute>} />
       <Route path="/camera" element={<PrivateRoute><CameraPage /></PrivateRoute>} />
+      <Route path="/portfolio/:id" element={<PrivateRoute><ViewingRecordDetailPage /></PrivateRoute>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
     </OnboardingOverlay>
