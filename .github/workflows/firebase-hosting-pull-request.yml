@@ -11,7 +11,6 @@ jobs:
   build_and_preview:
     if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
     runs-on: ubuntu-latest
-    environment: production
     steps:
       - uses: actions/checkout@v4
       - run: npm ci && npm run build
@@ -27,6 +26,7 @@ jobs:
           VITE_QWEN_API_KEY: ${{ secrets.VITE_QWEN_API_KEY }}
           VITE_AI_PROVIDER: ${{ vars.VITE_AI_PROVIDER }}
           VITE_USE_MOCK_DATA: ${{ vars.VITE_USE_MOCK_DATA }}
+          VITE_ENABLE_GUIDE_CACHE: ${{ vars.VITE_ENABLE_GUIDE_CACHE }}
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
