@@ -5,6 +5,7 @@ import { app } from './firebase'
 let analyticsPromise = null
 
 function getAnalyticsInstance() {
+  if (window.location.hostname.includes('web.app')) return Promise.resolve(null)
   if (!analyticsPromise) {
     const measurementId = import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
     if (!measurementId) {
